@@ -114,19 +114,30 @@ describe('ControlPlane critical projections', () => {
     expect(screen.getByText(/generated live from the sealed receipt/)).toBeInTheDocument()
   })
 
-  it('focus mode trades the side rails for a full-width stage and back', () => {
+  it('each rail collapses independently to a labeled strip', () => {
+    render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse mission rail' }))
+    expect(screen.getByRole('button', { name: 'Expand mission rail' })).toHaveTextContent('Mission · 30 → 14')
+    // The fleet is untouched by the left rail's collapse.
+    expect(screen.getByRole('button', { name: 'Collapse agent fleet' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand mission rail' }))
+    expect(screen.getByRole('button', { name: 'Collapse mission rail' })).toBeInTheDocument()
+  })
+
+  it('focus is the master collapse for both rails and back', () => {
     const { container } = render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} />)
     const main = container.querySelector('main')!
-    expect(main.classList.contains('focus-mode')).toBe(false)
 
     fireEvent.click(screen.getByRole('button', { name: 'Focus' }))
     expect(main.classList.contains('focus-mode')).toBe(true)
-    // Rails are hidden by the stylesheet, which jsdom does not load; the class
-    // is the contract. The map and drawer must survive the toggle.
+    expect(screen.getByRole('button', { name: 'Expand mission rail' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Expand agent fleet' })).toHaveTextContent('Fleet ·')
     expect(screen.getByText('Impact map')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Exit focus' })).toHaveAttribute('aria-pressed', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'Exit focus' }))
     expect(main.classList.contains('focus-mode')).toBe(false)
+    expect(screen.getByRole('button', { name: 'Collapse mission rail' })).toBeInTheDocument()
   })
 })

@@ -3,6 +3,8 @@ import {
   ArrowRight,
   ArrowsInSimple,
   ArrowsOutSimple,
+  CaretLineLeft,
+  CaretLineRight,
   Browser,
   CaretRight,
   Check,
@@ -99,9 +101,30 @@ function MissionStepper({ mission }: { mission: MissionStage[] }) {
   )
 }
 
-function ChangeMissionRail({ view }: { view: HackathonView }) {
+function ChangeMissionRail({
+  view,
+  collapsed,
+  onToggle,
+}: {
+  view: HackathonView
+  collapsed: boolean
+  onToggle: () => void
+}) {
+  if (collapsed) {
+    return (
+      <aside className="change-rail rail-collapsed" aria-label="Change and mission">
+        <button type="button" className="rail-expand" onClick={onToggle} aria-expanded="false" aria-label="Expand mission rail">
+          <CaretLineRight weight="bold" aria-hidden="true" />
+          <span className="rail-strip-label">{`Mission · ${view.policy.previousDays} → ${view.policy.authoritativeDays}`}</span>
+        </button>
+      </aside>
+    )
+  }
   return (
     <aside className="change-rail" aria-label="Change and mission">
+      <button type="button" className="rail-collapse" onClick={onToggle} aria-expanded="true" aria-label="Collapse mission rail">
+        <CaretLineLeft weight="bold" aria-hidden="true" />
+      </button>
       <ChangeCard view={view} />
       {view.triggerCrumb && (
         <div className="rail-crumb"><Fingerprint aria-hidden="true" /><div><span>Trigger crumb</span><strong>{view.triggerCrumb.id}</strong></div></div>
@@ -125,12 +148,36 @@ function AgentCard({ agent, verifier }: { agent: AgentData; verifier?: boolean }
   )
 }
 
-function FleetRail({ view }: { view: HackathonView }) {
+function FleetRail({
+  view,
+  collapsed,
+  onToggle,
+}: {
+  view: HackathonView
+  collapsed: boolean
+  onToggle: () => void
+}) {
   const activeStatuses = new Set(['DISPATCHED', 'RUNNING', 'FOUND', 'WAITING_REVIEW', 'BLOCKED'])
   const activeCount = view.agents.filter((agent) => activeStatuses.has(agent.status)).length
+  if (collapsed) {
+    return (
+      <aside className="fleet-rail rail-collapsed" aria-labelledby="fleet-heading">
+        <button type="button" className="rail-expand" onClick={onToggle} aria-expanded="false" aria-label="Expand agent fleet">
+          <CaretLineLeft weight="bold" aria-hidden="true" />
+          <span className="rail-strip-label">{`Fleet · ${activeCount} active`}</span>
+        </button>
+      </aside>
+    )
+  }
   return (
     <aside className="fleet-rail" aria-labelledby="fleet-heading">
-      <header className="fleet-heading"><div><SectionLabel>Actors</SectionLabel><h2 id="fleet-heading">Agent fleet</h2></div><span>{activeCount} active</span></header>
+      <header className="fleet-heading">
+        <div><SectionLabel>Actors</SectionLabel><h2 id="fleet-heading">Agent fleet</h2></div>
+        <span>{activeCount} active</span>
+        <button type="button" className="rail-collapse rail-collapse-inline" onClick={onToggle} aria-expanded="true" aria-label="Collapse agent fleet">
+          <CaretLineRight weight="bold" aria-hidden="true" />
+        </button>
+      </header>
       <div className="agent-list">
         {view.agents.map((agent) => <AgentCard key={agent.id} agent={agent} verifier={agent.id === 'independent-verifier'} />)}
       </div>
@@ -286,18 +333,33 @@ export function ControlPlane({
   runtime?: RouteARuntime | null
   apiBaseUrl?: string | null
 }) {
-  // Focus mode exists for one audience: a camera. It trades the side rails for
-  // a full-width map and a larger drawer so a single stage is legible on video.
-  const [focusMode, setFocusMode] = useState(false)
+  // Each rail collapses independently to a slim labeled strip; Focus is the
+  // master collapse for both. One stage at a time can fill the frame without
+  // anything being removed, only folded.
+  const [collapsed, setCollapsed] = useState({ left: false, right: false })
+  const focusMode = collapsed.left && collapsed.right
 
   return (
     <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}${focusMode ? ' focus-mode' : ''}`}>
       <TopBar view={snapshot} sourcePreference={sourcePreference} transportSource={transportSource} />
       {transportStatus}
-      <div className="control-grid">
-        <ChangeMissionRail view={snapshot} />
+      <div
+        className="control-grid"
+        style={{
+          gridTemplateColumns: `${collapsed.left ? '44px' : '246px'} minmax(0, 1fr) ${collapsed.right ? '44px' : '302px'}`,
+        }}
+      >
+        <ChangeMissionRail
+          view={snapshot}
+          collapsed={collapsed.left}
+          onToggle={() => setCollapsed((value) => ({ ...value, left: !value.left }))}
+        />
         <ImpactMap view={snapshot} />
-        <FleetRail view={snapshot} />
+        <FleetRail
+          view={snapshot}
+          collapsed={collapsed.right}
+          onToggle={() => setCollapsed((value) => ({ ...value, right: !value.right }))}
+        />
       </div>
       <EvidenceDrawer view={snapshot} runtime={runtime} apiBaseUrl={apiBaseUrl} />
       <RunDeck
@@ -313,7 +375,7 @@ export function ControlPlane({
         onNext={onRunNext}
         onReset={onRunReset}
         focusMode={focusMode}
-        onToggleFocus={() => setFocusMode((value) => !value)}
+        onToggleFocus={() => setCollapsed(focusMode ? { left: false, right: false } : { left: true, right: true })}
       />
     </main>
   )

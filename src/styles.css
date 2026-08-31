@@ -14,13 +14,13 @@
   --border-strong: #354b65;
   --text-primary: #f5f8fc;
   --text-secondary: #a8b5c7;
-  --text-tertiary: #78879a;
+  --text-tertiary: #8b9cb1;
   --state-active: #44c7f4;
   --state-verified: #49c88b;
   --state-review: #f2b84b;
   --state-blocked: #f06b73;
   --state-inferred: #9b8cff;
-  --state-muted: #607086;
+  --state-muted: #6f8095;
   --radius-panel: 14px;
   --radius-control: 9px;
   --duration-fast: 180ms;
@@ -1958,7 +1958,7 @@ time {
 .phase-stamp {
   color: var(--text-tertiary);
   font-family: 'DM Mono', monospace;
-  font-size: 8px;
+  font-size: 8.5px;
 }
 
 .phase-track .complete button { border-color: rgb(73 200 139 / 0.4); }
@@ -2834,7 +2834,7 @@ time {
 
 .node-outcome {
   font-family: 'DM Mono', monospace;
-  font-size: 7px;
+  font-size: 8px;
   font-style: normal;
   letter-spacing: 0.07em;
   color: var(--text-tertiary);
@@ -3023,7 +3023,7 @@ time {
   font-size: 9.5px;
 }
 
-.ext-node small { color: var(--text-tertiary); font-family: 'DM Mono', monospace; font-size: 7.5px; }
+.ext-node small { color: var(--text-tertiary); font-family: 'DM Mono', monospace; font-size: 8.5px; }
 .ext-node-external { border-color: rgb(68 199 244 / 0.5); }
 
 .ext-arrow {
@@ -3032,7 +3032,7 @@ time {
   gap: 2px;
   color: var(--state-active);
   font-family: 'DM Mono', monospace;
-  font-size: 7.5px;
+  font-size: 8.5px;
   letter-spacing: 0.04em;
 }
 
@@ -3255,15 +3255,73 @@ time {
 
 .brief-listen-lyria:hover:not(:disabled) { background: rgb(68 199 244 / 0.09); filter: none; }
 
-/* Focus mode — one stage at a time, sized for a camera */
+/* Collapsible rails — one stage at a time, sized for a camera */
 
-.control-plane.focus-mode .change-rail,
-.control-plane.focus-mode .fleet-rail {
-  display: none;
+.control-grid {
+  transition: grid-template-columns var(--duration-major) var(--ease-out);
 }
 
-.control-plane.focus-mode .control-grid {
-  grid-template-columns: 1fr;
+.change-rail,
+.fleet-rail {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.rail-collapse {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-tertiary);
+  background: rgb(7 17 31 / 0.6);
+  cursor: pointer;
+}
+
+.rail-collapse svg { width: 12px; }
+
+.rail-collapse:hover {
+  border-color: var(--state-active);
+  color: var(--text-primary);
+}
+
+.rail-collapse-inline {
+  position: static;
+  margin-left: 8px;
+}
+
+.rail-collapsed { padding: 0 !important; }
+
+.rail-expand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  padding: 14px 0;
+  border: 0;
+  color: var(--text-tertiary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rail-expand:hover { color: var(--state-active); background: rgb(68 199 244 / 0.05); }
+.rail-expand svg { flex: 0 0 14px; width: 14px; }
+
+.rail-strip-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
 }
 
 .control-plane.focus-mode .evidence-drawer {
