@@ -3448,12 +3448,6 @@ time {
 
 /* Graph: paper instead of night sky */
 
-.theme-light .graph-stage,
-.theme-light .impact-graph { background: transparent; }
-.theme-light .impact-node {
-  box-shadow: 0 10px 22px -16px rgb(23 34 46 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.6);
-}
-.theme-light .impact-edge { opacity: 0.55; }
 .theme-light .trigger-crumb { background: rgb(11 127 179 / 0.06); }
 .theme-light .graph-metrics strong { color: var(--text-primary); }
 
@@ -3501,30 +3495,6 @@ time {
   background: var(--bg-inset);
 }
 
-.theme-light .node-affected,
-.theme-light .node-verifying {
-  color: #085a80;
-  background: #e8f5fb;
-  box-shadow: 0 10px 22px -16px rgb(11 127 179 / 0.35);
-  border-color: rgb(11 127 179 / 0.55);
-}
-
-.theme-light .node-stale {
-  color: #7a5108;
-  background: #fdf3df;
-  border-color: rgb(160 106 16 / 0.6);
-}
-
-.theme-light .node-verified {
-  color: #10603d;
-  background: #e9f7ef;
-  border-color: rgb(23 122 79 / 0.5);
-  box-shadow: none;
-}
-
-.theme-light .node-repairing { color: #085a80; }
-.theme-light .impact-node.outcome-skipped { opacity: 0.5; }
-.theme-light .node-outcome { color: inherit; }
 
 .theme-light .before-after {
   background: var(--bg-inset);
@@ -3739,3 +3709,88 @@ time {
 .theme-light .trigger-crumb span { color: var(--text-tertiary); }
 .theme-light .change-rail { border-right: 1px solid var(--border-subtle); }
 .theme-light .fleet-rail { border-left: 1px solid var(--border-subtle); }
+
+
+/* Full-width hero map: white card shell, navy operations inset */
+
+.page-layout .page-impact .impact-panel {
+  min-height: 640px;
+  background: var(--bg-elevated);
+}
+
+.theme-light .graph-stage {
+  /* The inset re-pins the dark tokens, so node and edge rules that read
+     tokens revert to their night-ops palette inside the navy without any
+     duplicated styling. */
+  --bg-node: #0d1a2b;
+  --border-subtle: #26364b;
+  --border-strong: #354b65;
+  --text-secondary: #a8b5c7;
+  --text-tertiary: #8b9cb1;
+  --state-active: #44c7f4;
+  --state-verified: #49c88b;
+  --state-review: #f2b84b;
+  --state-blocked: #f06b73;
+  margin: 4px 14px 12px;
+  border: 1px solid #16304f;
+  border-radius: 14px;
+  background:
+    linear-gradient(rgb(127 214 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(127 214 255 / 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 50% 38%, rgb(68 199 244 / 0.05), transparent 52%),
+    linear-gradient(180deg, #0e2a49, #0a2038 78%);
+  background-size: 28px 28px, 28px 28px, auto, auto;
+}
+
+.theme-light .impact-panel {
+  background: var(--bg-elevated);
+}
+
+/* Cause + mission as a full-width card: cause left, crumb and mission right */
+
+.page-layout .change-rail:not(.rail-collapsed) {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  gap: 0 26px;
+  align-items: start;
+}
+
+.page-layout .change-rail:not(.rail-collapsed) .change-card { grid-row: 1 / 3; }
+.page-layout .change-rail:not(.rail-collapsed) .rail-crumb { grid-column: 2; }
+.page-layout .change-rail:not(.rail-collapsed) .mission-stepper { grid-column: 2; }
+
+.page-layout .mission-stepper ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+
+/* Fleet and ledger share the row */
+
+.page-layout .page-duo > section { min-width: 0; }
+.page-layout .agent-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.page-layout .page-duo .drawer-tabs-row { display: flex; flex-wrap: wrap; align-items: center; }
+.page-layout .page-duo .drawer-tabs { overflow-x: auto; }
+
+@media (max-width: 1280px) {
+  .page-layout .agent-list { grid-template-columns: 1fr; }
+}
+
+/* Half-width ledger: interior grids rewrap instead of spilling the card */
+
+.page-layout .page-duo .evidence-drawer { overflow: hidden; }
+.page-layout .page-duo .drawer-tabs { flex-wrap: wrap; overflow: visible; }
+.page-layout .page-duo .receipt-panel { grid-template-columns: auto 1fr; }
+.page-layout .page-duo .before-after,
+.page-layout .page-duo .receipt-metrics,
+.page-layout .page-duo .receipt-hash { grid-column: 1 / -1; }
+.page-layout .page-duo .receipt-hash { overflow-wrap: anywhere; }
+.page-layout .page-duo .brief-head { flex-wrap: wrap; gap: 8px; }
+.page-layout .page-duo .brief-tracks { flex-wrap: wrap; }
+.page-layout .page-duo .external-action-panel,
+.page-layout .page-duo .architecture-panel { grid-template-columns: 1fr; gap: 18px; }
+.page-layout .page-duo .authority-gate { grid-template-columns: 1fr; }
+
+@media (max-width: 1360px) {
+  .page-layout .page-duo { grid-template-columns: 1fr; }
+}

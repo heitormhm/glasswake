@@ -404,31 +404,30 @@ export function ControlPlane({
           />
         </section>
 
-        <div className="page-duo">
-          <section id="impact" className="page-impact" aria-label="Impact map">
-            <ImpactMap view={snapshot} />
-          </section>
-          <div className="page-side">
-            <section id="mission" aria-label="Cause and mission">
-              <ChangeMissionRail
-                view={snapshot}
-                collapsed={collapsed.left}
-                onToggle={() => setCollapsed((value) => ({ ...value, left: !value.left }))}
-              />
-            </section>
-            <section id="fleet" aria-label="Agent fleet">
-              <FleetRail
-                view={snapshot}
-                collapsed={collapsed.right}
-                onToggle={() => setCollapsed((value) => ({ ...value, right: !value.right }))}
-              />
-            </section>
-          </div>
-        </div>
-
-        <section id="ledger" aria-label="Evidence ledger">
-          <EvidenceDrawer view={snapshot} runtime={runtime} apiBaseUrl={apiBaseUrl} />
+        <section id="impact" className="page-impact" aria-label="Impact map">
+          <ImpactMap view={snapshot} />
         </section>
+
+        <section id="mission" aria-label="Cause and mission">
+          <ChangeMissionRail
+            view={snapshot}
+            collapsed={collapsed.left}
+            onToggle={() => setCollapsed((value) => ({ ...value, left: !value.left }))}
+          />
+        </section>
+
+        <div className="page-duo">
+          <section id="fleet" aria-label="Agent fleet">
+            <FleetRail
+              view={snapshot}
+              collapsed={collapsed.right}
+              onToggle={() => setCollapsed((value) => ({ ...value, right: !value.right }))}
+            />
+          </section>
+          <section id="ledger" aria-label="Evidence ledger">
+            <EvidenceDrawer view={snapshot} runtime={runtime} apiBaseUrl={apiBaseUrl} />
+          </section>
+        </div>
       </div>
     </main>
   )
