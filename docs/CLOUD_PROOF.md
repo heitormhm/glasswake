@@ -169,7 +169,9 @@ instead.
 - `GET /v1/demo/snapshots`, `GET /docs`, and `GET /openapi.json` returned `200`.
 - OpenAPI contains `/healthz`; captured OpenAPI SHA-256 is `aa04504add784f423334604f6dc6a674bb5a9832dffb76cb908feecec51b09bd`.
 
-Known edge anomaly: external `GET /healthz` returns a Google front-end `404` and does not reach the revision; `GET /healthz/` reaches FastAPI and returns its expected `307` redirect. This does not invalidate the successful startup probe or the two authenticated `200` proof operations, but it should be repaired in a successor revision before using `/healthz` as an external uptime check.
+Known edge anomaly, repaired in `glasswake-kanon-pulse-00004-4gk`: external `GET /healthz` returns a Google front-end `404` and does not reach the revision; `GET /healthz/` reaches FastAPI and returns its expected `307` redirect. This did not invalidate the successful startup probe or the two authenticated `200` proof operations, but it did make the path unusable as an external check, and it blocked the Route B client, whose first validation step is a health request.
+
+The successor revision serves the identical health payload at `GET /v1/healthz`, which is not intercepted. `routeAClient` now validates the contract hash from that path, so Route B can reach a Cloud Run origin. `/healthz` is retained for container-level checks.
 
 ## Remaining authority boundary
 

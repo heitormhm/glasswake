@@ -20,7 +20,7 @@ function routeAFetch(overrides: Partial<Record<(typeof canonicalRouteAStates)[nu
   )
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = new URL(String(input))
-    if (url.pathname === '/healthz') {
+    if (url.pathname === '/v1/healthz') {
       return jsonResponse({ status: 'ok', mode: 'deterministic_fixture', contract_sha256: canonicalContractHash })
     }
     if (url.pathname === '/v1/demo/snapshots') {
@@ -64,7 +64,7 @@ describe('Route A local transport', () => {
   it('fails closed when health advertises a different contract hash', async () => {
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input))
-      if (url.pathname === '/healthz') {
+      if (url.pathname === '/v1/healthz') {
         return jsonResponse({
           status: 'ok',
           mode: 'deterministic_fixture',

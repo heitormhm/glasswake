@@ -31,7 +31,8 @@ uv run uvicorn services.cloud_api.main:app --host 127.0.0.1 --port 8080
 
 Important endpoints:
 
-- `GET /healthz`
+- `GET /v1/healthz` — the health path clients use
+- `GET /healthz` — container-level only; Google's frontend intercepts it on Cloud Run
 - `GET /v1/agent-catalog`
 - `GET /v1/demo/snapshots`
 - `GET /v1/demo/snapshots/{state}`

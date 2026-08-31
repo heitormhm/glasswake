@@ -37,13 +37,29 @@ def _snapshots() -> dict[str, dict[str, Any]]:
     return GoldenPathRunner().generate_snapshots()
 
 
-@app.get("/healthz")
-def healthz() -> dict[str, Any]:
+def _health_payload() -> dict[str, Any]:
     return {
         "status": "ok",
         "mode": "deterministic_fixture",
         "contract_sha256": schema_sha256(),
     }
+
+
+@app.get("/healthz")
+def healthz() -> dict[str, Any]:
+    """Container-level health, reachable locally and inside the image.
+
+    Not reachable over the Cloud Run URL: Google's frontend answers /healthz
+    itself with a 404 that never arrives at the container. Clients must use
+    /v1/healthz instead.
+    """
+    return _health_payload()
+
+
+@app.get("/v1/healthz")
+def healthz_v1() -> dict[str, Any]:
+    """The health path clients use. Identical payload, but not intercepted."""
+    return _health_payload()
 
 
 @app.get("/v1/agent-catalog")

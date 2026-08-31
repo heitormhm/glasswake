@@ -198,7 +198,7 @@ export async function loadRouteASequence({
 
   try {
     const [healthPayload, catalogPayload] = await Promise.all([
-      fetchJson(fetchImpl, `${baseUrl}/healthz`, controller.signal),
+      fetchJson(fetchImpl, `${baseUrl}/v1/healthz`, controller.signal),
       fetchJson(fetchImpl, `${baseUrl}/v1/demo/snapshots`, controller.signal),
     ])
     const health = assertHealth(healthPayload)

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import pytest
 from fastapi.testclient import TestClient
 
+from hackathon.contracts import schema_sha256
 from hackathon.fleet import GoldenPathRunner
 from hackathon.google_stack.firestore_store import FirestoreRunStore
 from hackathon.google_stack.gemini import GeminiStructuredReviewer
@@ -188,4 +189,17 @@ def test_run_claims_no_cloud_evidence_when_running_locally(monkeypatch):
         "firestore": False,
         "evidence_refs": [],
     }
+
+
+def test_v1_health_matches_healthz_and_binds_the_same_contract():
+    client = TestClient(app)
+    legacy = client.get("/healthz")
+    versioned = client.get("/v1/healthz")
+
+    assert legacy.status_code == 200
+    assert versioned.status_code == 200
+    # Clients validate the contract hash from /v1/healthz because Google's
+    # frontend intercepts /healthz on Cloud Run. The two must never drift.
+    assert versioned.json() == legacy.json()
+    assert versioned.json()["contract_sha256"] == schema_sha256()
 
