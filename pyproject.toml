@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "glasswake-kanon-pulse"
+version = "0.1.0"
+description = "Deterministic GlassWake Devpost MVP backend for the Northstar Supply golden path."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary hackathon consolidation; reused-source disclosures are in docs/DEVPOST_DISCLOSURE.md" }
+dependencies = []
+
+[project.optional-dependencies]
+api = [
+  "fastapi>=0.116,<1",
+  "uvicorn[standard]>=0.35,<1",
+]
+google = [
+  "google-adk>=1.17,<2",
+  "google-cloud-firestore>=2.20,<3",
+  "google-genai>=1.0,<2",
+  "pydantic>=2.12,<3",
+]
+dev = [
+  "httpx>=0.28,<1",
+  "jsonschema>=4.25,<5",
+  "pytest>=9,<10",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+glasswake-golden-path = "hackathon.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hackathon"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+

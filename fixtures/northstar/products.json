@@ -1,0 +1,35 @@
+{
+  "store": "Northstar Supply",
+  "currency": "USD",
+  "authoritative_return_window_days": 14,
+  "products": [
+    {
+      "sku": "NST-BAG-001",
+      "name": "Navy Commuter Bag",
+      "price": 179,
+      "color": "navy",
+      "category": "bags",
+      "baseline_surface_return_window_days": 30,
+      "asset_hint": "magnific/navy_commuter_bag"
+    },
+    {
+      "sku": "NST-MUG-002",
+      "name": "Ivory Smart Travel Mug",
+      "price": 64,
+      "color": "ivory",
+      "category": "drinkware",
+      "baseline_surface_return_window_days": 14,
+      "asset_hint": "magnific/ivory_smart_travel_mug"
+    },
+    {
+      "sku": "NST-AUD-003",
+      "name": "Forest Wireless Headphones",
+      "price": 129,
+      "color": "forest-green",
+      "category": "audio",
+      "baseline_surface_return_window_days": 14,
+      "asset_hint": "magnific/forest_wireless_headphones"
+    }
+  ]
+}
+

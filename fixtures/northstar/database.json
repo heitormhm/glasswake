@@ -1,0 +1,7 @@
+{
+  "record_id": "db_returns_config_001",
+  "returns_window_days": 14,
+  "source": "Policy Database",
+  "evidence_label": "VERIFIED"
+}
+

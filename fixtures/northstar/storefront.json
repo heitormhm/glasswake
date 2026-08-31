@@ -1,0 +1,17 @@
+{
+  "store": "Northstar Supply",
+  "surfaces": {
+    "product_return_badge": {
+      "sku": "NST-BAG-001",
+      "returns_window_days": 30,
+      "path": "/products/navy-commuter-bag",
+      "modality": "DOM_ARIA"
+    },
+    "checkout_help": {
+      "returns_window_days": 30,
+      "path": "/checkout#returns-help",
+      "modality": "DOM_ARIA"
+    }
+  }
+}
+
