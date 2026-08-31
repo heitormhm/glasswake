@@ -92,4 +92,17 @@ describe('ControlPlane critical projections', () => {
     expect(screen.getByText('5 of 5 postconditions passed')).toBeInTheDocument()
     vi.unstubAllGlobals()
   })
+
+  it('opens on the external action when the run reaches the repair frame', () => {
+    render(<ControlPlane snapshot={getSnapshot(6)} onSelectSnapshot={vi.fn()} apiBaseUrl="http://127.0.0.1:8080" />)
+    expect(screen.getByRole('tab', { name: /External action/ })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('UPDATE_STOREFRONT_RETURN_POLICY')).toBeInTheDocument()
+    expect(screen.getByText(/authenticated HTTPS/)).toBeInTheDocument()
+    expect(screen.getByText('Northstar Sandbox')).toBeInTheDocument()
+  })
+
+  it('states that the mutation response is not proof until a fresh read happens', () => {
+    render(<ControlPlane snapshot={getSnapshot(6)} onSelectSnapshot={vi.fn()} apiBaseUrl="http://127.0.0.1:8080" />)
+    expect(screen.getByText(/The mutation response is not verification/)).toBeInTheDocument()
+  })
 })

@@ -3001,3 +3001,94 @@ time {
 .brief-authority svg { width: 11px; }
 
 .brief-note { margin: 0; color: var(--text-tertiary); font-size: 8.5px; line-height: 1.2; }
+
+/* External action — the side effect that leaves this runtime */
+
+.external-action-panel {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(260px, 1.2fr) minmax(240px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.ext-hop { display: flex; align-items: center; gap: 9px; margin-top: 8px; }
+
+.ext-node {
+  display: grid;
+  gap: 1px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 7px;
+  color: var(--text-primary);
+  font-size: 9.5px;
+}
+
+.ext-node small { color: var(--text-tertiary); font-family: 'DM Mono', monospace; font-size: 7.5px; }
+.ext-node-external { border-color: rgb(68 199 244 / 0.5); }
+
+.ext-arrow {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  color: var(--state-active);
+  font-family: 'DM Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+}
+
+.ext-arrow svg { width: 14px; }
+
+.ext-live { margin: 9px 0 0; color: var(--text-secondary); font-size: 9.5px; }
+.ext-live strong { color: var(--state-active); font-family: 'DM Mono', monospace; }
+
+.ext-detail dl { display: grid; gap: 5px; margin: 8px 0 0; }
+.ext-detail dl > div { display: grid; grid-template-columns: 96px 1fr; gap: 9px; align-items: baseline; }
+.ext-detail dt { color: var(--text-tertiary); font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+.ext-detail dd { margin: 0; color: var(--text-primary); font-size: 9.5px; word-break: break-all; }
+.ext-detail dd.mono { font-family: 'DM Mono', monospace; font-size: 8.5px; color: var(--text-secondary); }
+
+.ext-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+.ext-status svg { width: 13px; }
+.ext-status[data-status="APPLIED"] { border-color: rgb(73 200 139 / 0.5); color: var(--state-verified); }
+.ext-status[data-status="ALREADY_APPLIED"] { border-color: rgb(68 199 244 / 0.5); color: var(--state-active); }
+.ext-status[data-status="REJECTED"] { border-color: rgb(214 138 74 / 0.55); color: var(--state-review); }
+.ext-status[data-status="applying"] { border-color: var(--state-active); color: var(--state-active); }
+
+.ext-reason { margin: 7px 0 0; color: var(--state-review); font-size: 9px; }
+
+.ext-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.ext-verdict svg { width: 13px; }
+.ext-verdict-pass { border: 1px solid rgb(73 200 139 / 0.5); color: var(--state-verified); }
+.ext-verdict-fail { border: 1px solid rgb(214 138 74 / 0.55); color: var(--state-review); }
+
+.ext-proof p { margin: 7px 0 0; color: var(--text-secondary); font-size: 9.5px; }
+.ext-note { color: var(--text-tertiary) !important; font-size: 8.5px !important; }
+.ext-controls { display: flex; gap: 8px; margin-top: 11px; }
+
+@media (max-width: 1180px) {
+  .external-action-panel { grid-template-columns: 1fr; gap: 16px; }
+}

@@ -8,6 +8,7 @@ import {
   MagnifyingGlass,
   Receipt,
   ShieldCheck,
+  ArrowsLeftRight,
   SpeakerHigh,
   SpinnerGap,
   TreeStructure,
@@ -17,11 +18,14 @@ import type { RouteARuntime } from '../app/routeAClient'
 import type { AuthorityData, EvidenceData, HackathonView, ReceiptData, VerificationData } from '../app/types'
 import { EvidenceBadge, SectionLabel } from './Primitives'
 
-const tabs = ['Findings', 'Crumbs', 'Authority', 'Verification', 'Receipt', 'Architecture'] as const
+const tabs = ['Findings', 'Crumbs', 'Authority', 'External action', 'Verification', 'Receipt', 'Architecture'] as const
 type EvidenceTab = (typeof tabs)[number]
 
 function preferredTab(view: HackathonView): EvidenceTab {
   if (view.receipt) return 'Receipt'
+  // The repair frame is where the external side effect happens, so that is
+  // what the drawer should be showing when the run reaches it.
+  if (view.snapshot === 'repair_applied') return 'External action'
   if (view.verification) return 'Verification'
   if (view.authority) return 'Authority'
   if (view.triggerCrumb && view.index <= 2) return 'Crumbs'
@@ -97,6 +101,156 @@ function AuthorityPanel({ authority }: { authority: AuthorityData | null }) {
       </div>
       <p className="independence-note"><Fingerprint aria-hidden="true" />{authority.independenceReminder}</p>
     </article>
+  )
+}
+
+
+interface ExternalActionState {
+  before: number | null
+  action: {
+    status: string
+    capability: string
+    surface_id: string
+    product_id: string
+    before: number | null
+    after: number | null
+    action_id: string | null
+    idempotency_key: string
+    authority_grant_id: string
+    boundary: string
+    reason: string | null
+  }
+  verification: {
+    result: string
+    expected_return_window_days: number
+    observed_return_window_days: number | null
+    trusted_action_response: boolean
+  } | null
+  receipt_sealable: boolean
+}
+
+/**
+ * The side effect leaves this runtime, so the panel shows the boundary it
+ * crosses and keeps the action and its proof visually separate. A mutation
+ * that reports success is not a verified mutation.
+ */
+function ExternalActionPanel({ apiBaseUrl }: { apiBaseUrl: string | null }) {
+  const [external, setExternal] = useState<number | null>(null)
+  const [phase, setPhase] = useState<'idle' | 'applying' | 'verifying' | 'done' | 'error'>('idle')
+  const [result, setResult] = useState<ExternalActionState | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const readState = async () => {
+    if (!apiBaseUrl) return
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/demo/external/state`)
+      const payload = await response.json()
+      setExternal(payload.available ? payload.product?.return_window_days ?? null : null)
+    } catch {
+      setExternal(null)
+    }
+  }
+
+  useEffect(() => { void readState() }, [apiBaseUrl])
+
+  const call = async (path: string) => {
+    if (!apiBaseUrl) {
+      setPhase('error')
+      setError('No live origin. The external action requires the Route A service.')
+      return null
+    }
+    const response = await fetch(`${apiBaseUrl}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    return response.json()
+  }
+
+  const execute = async () => {
+    setError(null)
+    setPhase('applying')
+    try {
+      const payload = (await call('/v1/demo/external/action')) as ExternalActionState | null
+      if (!payload) return
+      setResult(payload)
+      setPhase('verifying')
+      await readState()
+      window.setTimeout(() => setPhase('done'), 500)
+    } catch (caught) {
+      setPhase('error')
+      setError(caught instanceof Error ? caught.message : 'External action failed.')
+    }
+  }
+
+  const reset = async () => {
+    setResult(null)
+    setPhase('idle')
+    setError(null)
+    try { await call('/v1/demo/external/reset') } catch { /* reset is best-effort */ }
+    await readState()
+  }
+
+  const action = result?.action
+  const verification = result?.verification
+
+  return (
+    <div className="external-action-panel">
+      <section className="ext-boundary" aria-label="Action boundary">
+        <SectionLabel>Action boundary</SectionLabel>
+        <div className="ext-hop">
+          <span className="ext-node">GlassWake<small>Cloud Run</small></span>
+          <span className="ext-arrow"><ArrowsLeftRight weight="bold" aria-hidden="true" />authenticated HTTPS</span>
+          <span className="ext-node ext-node-external">Northstar Sandbox<small>separate service</small></span>
+        </div>
+        <p className="ext-live">External surface now: <strong>{external === null ? 'unreadable' : `${external} days`}</strong></p>
+      </section>
+
+      <section className="ext-detail" aria-label="External action">
+        <SectionLabel>External action</SectionLabel>
+        <dl>
+          <div><dt>Capability</dt><dd>{action?.capability ?? 'UPDATE_STOREFRONT_RETURN_POLICY'}</dd></div>
+          <div><dt>Surface</dt><dd>{action?.surface_id ?? 'storefront.product_return_badge'}</dd></div>
+          <div><dt>Authority</dt><dd>REPAIR_1</dd></div>
+          <div><dt>Before → after</dt><dd>{action ? `${action.before ?? '—'} → ${action.after ?? '—'} days` : '30 → 14 days'}</dd></div>
+          <div><dt>Idempotency</dt><dd className="mono">{action?.idempotency_key ?? 'protected'}</dd></div>
+          <div><dt>External ref</dt><dd className="mono">{action?.action_id ?? '—'}</dd></div>
+        </dl>
+        <div className="ext-status" data-status={action?.status ?? phase}>
+          {phase === 'applying' ? <><SpinnerGap className="semantic-spin" aria-hidden="true" />APPLYING…</>
+            : action?.status === 'REJECTED' ? <><LockKey aria-hidden="true" />REJECTED · zero writes</>
+            : action ? <><Check weight="bold" aria-hidden="true" />{action.status}</>
+            : <>Not yet attempted</>}
+        </div>
+        {action?.reason && <p className="ext-reason">{action.reason}</p>}
+      </section>
+
+      <section className="ext-proof" aria-label="Independent verification">
+        <SectionLabel>Fresh verification</SectionLabel>
+        {verification ? (
+          <>
+            <div className={`ext-verdict ext-verdict-${verification.result.toLowerCase()}`}>
+              {verification.result === 'PASS' ? <Check weight="bold" aria-hidden="true" /> : <SpinnerGap aria-hidden="true" />}
+              {verification.result}
+            </div>
+            <p>Re-read the external service and observed <strong>{verification.observed_return_window_days ?? '—'} days</strong>, expected {verification.expected_return_window_days}.</p>
+            <p className="ext-note">Action response trusted as proof: <strong>no</strong>.</p>
+            <p className="ext-note">Receipt {result?.receipt_sealable ? 'may now seal' : 'withheld'}.</p>
+          </>
+        ) : (
+          <p className="ext-note">No proof yet. The mutation response is not verification.</p>
+        )}
+
+        <div className="ext-controls">
+          <button type="button" className="run-button run-button-go" onClick={() => void execute()} disabled={phase === 'applying'}>
+            {phase === 'applying' ? 'Applying…' : 'Execute external action'}
+          </button>
+          <button type="button" className="run-button" onClick={() => void reset()}>Reset merchant</button>
+        </div>
+        {error && <p className="ext-reason">{error}</p>}
+      </section>
+    </div>
   )
 }
 
@@ -327,6 +481,7 @@ export function EvidenceDrawer({
         {activeTab === 'Findings' && <EvidenceRows rows={view.evidence} />}
         {activeTab === 'Crumbs' && <CrumbsPanel view={view} />}
         {activeTab === 'Authority' && <AuthorityPanel authority={view.authority} />}
+        {activeTab === 'External action' && <ExternalActionPanel apiBaseUrl={apiBaseUrl} />}
         {activeTab === 'Verification' && <VerificationPanel verification={view.verification} />}
         {activeTab === 'Receipt' && <ReceiptPanel receipt={view.receipt} apiBaseUrl={apiBaseUrl} />}
         {activeTab === 'Architecture' && <ArchitecturePanel view={view} runtime={runtime} />}
