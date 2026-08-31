@@ -3092,3 +3092,153 @@ time {
 @media (max-width: 1180px) {
   .external-action-panel { grid-template-columns: 1fr; gap: 16px; }
 }
+
+/* ==========================================================================
+   Motion & material pass
+   Transform/opacity only — nothing here animates layout, so the compositor
+   carries every frame. All of it is disabled by the global
+   prefers-reduced-motion block above.
+   ========================================================================== */
+
+/* --- Tactile feedback -----------------------------------------------------
+   A control that does not answer the press feels broken even when it works. */
+
+.run-button:active:not(:disabled),
+.brief-listen:active:not(:disabled),
+.transport-action:active:not(:disabled),
+.phase-track button:active,
+.drawer-tabs button:active {
+  transform: translateY(1px) scale(0.994);
+}
+
+/* --- Edge refraction ------------------------------------------------------
+   A 1px inner highlight reads as a lit edge rather than an outer glow, which
+   keeps surfaces sitting in the dark instead of floating above it. */
+
+.change-card,
+.agent-card,
+.impact-panel,
+.executive-brief,
+.receipt-panel,
+.authority-gate {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.035);
+}
+
+/* --- Staggered entrance ---------------------------------------------------
+   The fleet and the phase track arrive as a sequence, so the eye is led
+   through them rather than confronted with everything at once. */
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+.agent-list .agent-card {
+  animation: rise-in 420ms var(--ease-out) backwards;
+}
+
+.agent-list .agent-card:nth-child(1) { animation-delay: 40ms; }
+.agent-list .agent-card:nth-child(2) { animation-delay: 90ms; }
+.agent-list .agent-card:nth-child(3) { animation-delay: 140ms; }
+.agent-list .agent-card:nth-child(4) { animation-delay: 190ms; }
+.agent-list .agent-card:nth-child(5) { animation-delay: 240ms; }
+
+.phase-track li { animation: rise-in 360ms var(--ease-out) backwards; }
+.phase-track li:nth-child(1) { animation-delay: 20ms; }
+.phase-track li:nth-child(2) { animation-delay: 50ms; }
+.phase-track li:nth-child(3) { animation-delay: 80ms; }
+.phase-track li:nth-child(4) { animation-delay: 110ms; }
+.phase-track li:nth-child(5) { animation-delay: 140ms; }
+.phase-track li:nth-child(6) { animation-delay: 170ms; }
+.phase-track li:nth-child(7) { animation-delay: 200ms; }
+.phase-track li:nth-child(8) { animation-delay: 230ms; }
+.phase-track li:nth-child(9) { animation-delay: 260ms; }
+
+/* --- Live state, not decoration -------------------------------------------
+   Only genuinely in-flight things breathe. A dashboard where everything
+   pulses tells you nothing about what is actually happening. */
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+.status-pill.status-running .status-shape,
+.status-pill.status-dispatched .status-shape,
+.transport-loading-copy span {
+  animation: breathe 1.9s var(--ease-out) infinite;
+}
+
+.phase-track .active button {
+  will-change: transform;
+  animation: phase-settle 480ms var(--ease-out);
+}
+
+@keyframes phase-settle {
+  from { transform: scale(0.985); }
+  to   { transform: none; }
+}
+
+/* --- Hover intent ---------------------------------------------------------
+   A 1px lift plus a border that warms; no colour flooding, no scale jumps. */
+
+.agent-card,
+.phase-track button,
+.product-card a {
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.agent-card:hover {
+  transform: translate3d(0, -1px, 0);
+  border-color: var(--border-strong);
+}
+
+.product-card a:hover { transform: translate3d(0, -2px, 0); }
+
+/* --- Graph arrival --------------------------------------------------------
+   Nodes fade rather than fly: the graph is a map, and maps should not lurch. */
+
+.impact-node {
+  transition:
+    border-color var(--duration-major) var(--ease-out),
+    opacity var(--duration-major) var(--ease-out),
+    box-shadow var(--duration-major) var(--ease-out);
+}
+
+.impact-edge {
+  transition:
+    stroke var(--duration-major) var(--ease-out),
+    opacity var(--duration-major) var(--ease-out);
+}
+
+/* --- The one moment worth marking ----------------------------------------
+   The receipt is the payoff of the whole run, so it gets a single settle. */
+
+.receipt-panel {
+  animation: receipt-settle 560ms var(--ease-out);
+}
+
+@keyframes receipt-settle {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+.ext-verdict-pass {
+  animation: rise-in 420ms var(--ease-out) backwards;
+  animation-delay: 120ms;
+}
+
+/* --- Focus visibility -----------------------------------------------------
+   Keyboard focus must never be quieter than hover. */
+
+.run-button:focus-visible,
+.phase-track button:focus-visible,
+.drawer-tabs button:focus-visible,
+.brief-listen:focus-visible,
+.transport-action:focus-visible {
+  outline: 2px solid var(--state-active);
+  outline-offset: 2px;
+}
