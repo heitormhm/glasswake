@@ -1,0 +1,451 @@
+{
+  "agents": [
+    {
+      "agent_id": "change-sentinel",
+      "allowed_data_scopes": [
+        "northstar.change_event",
+        "northstar.dependencies"
+      ],
+      "allowed_tools": [
+        "fixture.read",
+        "watchzone.project",
+        "fleet.dispatch"
+      ],
+      "authority_ceiling": "DISPATCH_ONLY",
+      "display_name": "Change Sentinel",
+      "domain": "orchestration",
+      "input_schema": "northstar.change_event.v1",
+      "output_schema": "glasswake.trigger_crumb.v1",
+      "owner": "GlassWake",
+      "purpose": "Accept one frozen change event, issue one TriggerCrumb and dispatch specialists.",
+      "status": "VERIFIED",
+      "version": "1.0.0"
+    },
+    {
+      "agent_id": "policy-auditor",
+      "allowed_data_scopes": [
+        "northstar.policy"
+      ],
+      "allowed_tools": [
+        "fixture.read"
+      ],
+      "authority_ceiling": "EVIDENCE_ONLY",
+      "display_name": "Policy Agent",
+      "domain": "policy",
+      "input_schema": "northstar.policy.v1",
+      "output_schema": "glasswake.finding.v1",
+      "owner": "E-commerce Operations",
+      "purpose": "Read the authoritative returns-policy fixture and return structured evidence.",
+      "status": "VERIFIED",
+      "version": "1.0.0"
+    },
+    {
+      "agent_id": "data-auditor",
+      "allowed_data_scopes": [
+        "northstar.database",
+        "northstar.policy"
+      ],
+      "allowed_tools": [
+        "fixture.read"
+      ],
+      "authority_ceiling": "EVIDENCE_ONLY",
+      "display_name": "Data Agent",
+      "domain": "database",
+      "input_schema": "northstar.database.v1",
+      "output_schema": "glasswake.finding.v1",
+      "owner": "Data Platform",
+      "purpose": "Compare the synthetic policy database with the authoritative policy.",
+      "status": "VERIFIED",
+      "version": "1.0.0"
+    },
+    {
+      "agent_id": "storefront-auditor",
+      "allowed_data_scopes": [
+        "northstar.storefront",
+        "northstar.support",
+        "northstar.products"
+      ],
+      "allowed_tools": [
+        "fixture.read",
+        "dom_aria.inspect"
+      ],
+      "authority_ceiling": "EVIDENCE_ONLY",
+      "display_name": "Storefront Agent",
+      "domain": "customer-surfaces",
+      "input_schema": "northstar.surface_bundle.v1",
+      "output_schema": "glasswake.finding.v1",
+      "owner": "Digital Commerce",
+      "purpose": "Inspect product, checkout and support surfaces for stale policy claims.",
+      "status": "WAITING_REVIEW",
+      "version": "1.0.0"
+    },
+    {
+      "agent_id": "independent-verifier",
+      "allowed_data_scopes": [
+        "northstar.repaired_fixture",
+        "northstar.postconditions"
+      ],
+      "allowed_tools": [
+        "fixture.read_fresh",
+        "postcondition.evaluate"
+      ],
+      "authority_ceiling": "VERIFY_ONLY",
+      "display_name": "Independent Verifier",
+      "domain": "verification",
+      "input_schema": "glasswake.frozen_verification_mission.v1",
+      "output_schema": "glasswake.verification.v1",
+      "owner": "Risk and Controls",
+      "purpose": "Run frozen postconditions from a fresh fixture copy without diagnosis narrative.",
+      "status": "IDLE",
+      "version": "1.0.0"
+    }
+  ],
+  "authority": {
+    "allowed_paths": [
+      "storefront.checkout_help",
+      "storefront.product_return_badge",
+      "support.returns_answer"
+    ],
+    "decision": "REPAIR_1",
+    "evidence_refs": [
+      "fixture://northstar/storefront.json#/surfaces/checkout_help",
+      "fixture://northstar/storefront.json#/surfaces/product_return_badge",
+      "fixture://northstar/support.json"
+    ],
+    "reason": "One bounded synthetic RepairBrief covers only the stale returns-policy surfaces.",
+    "repair_brief_id": "repair_brief_returns_001",
+    "rollback_required": true
+  },
+  "change_event": {
+    "after": 14,
+    "before": 30,
+    "event_id": "chg_returns_001",
+    "evidence_label": "VERIFIED",
+    "source": "policy",
+    "subject": "policy.returns_window_days"
+  },
+  "cloud_proof": {
+    "cloud_run": false,
+    "evidence_refs": [],
+    "firestore": false
+  },
+  "crumbs": [
+    {
+      "can_grant_authority": false,
+      "content_hash": "sha256:97fcaec647b21d4ac87113a6ae83ea338cb1c36392312d0c525f4cf2d9f2c941",
+      "crumb_id": "crumb_trigger_returns_001",
+      "evidence_label": "VERIFIED",
+      "evidence_refs": [
+        "fixture://northstar/policy.json"
+      ],
+      "kind": "TRIGGER",
+      "source_agent_id": "change-sentinel",
+      "statement": "Returns policy changed from 30 days to 14 days."
+    },
+    {
+      "can_grant_authority": false,
+      "content_hash": "sha256:bb41f1da7f2e7d5ed2ee885789c61f343d50110093dadc64e4e2f8e03305dca8",
+      "crumb_id": "crumb_finding_policy_001",
+      "evidence_label": "VERIFIED",
+      "evidence_refs": [
+        "fixture://northstar/policy.json"
+      ],
+      "kind": "EVIDENCE",
+      "source_agent_id": "policy-auditor",
+      "statement": "policy.returns_window observed 14; expected 14; stale=false."
+    },
+    {
+      "can_grant_authority": false,
+      "content_hash": "sha256:23a15f796b645d00c3a674b674a97e3648583a2d7c299520e11029072122f4e3",
+      "crumb_id": "crumb_finding_database_001",
+      "evidence_label": "VERIFIED",
+      "evidence_refs": [
+        "fixture://northstar/database.json"
+      ],
+      "kind": "EVIDENCE",
+      "source_agent_id": "data-auditor",
+      "statement": "db.return_window_days observed 14; expected 14; stale=false."
+    },
+    {
+      "can_grant_authority": false,
+      "content_hash": "sha256:79f6338d32d97baa1f87f6835a301e6e4bd32f3bc0b02c47163d0f00dd3f3ab4",
+      "crumb_id": "crumb_finding_product_001",
+      "evidence_label": "OBSERVED",
+      "evidence_refs": [
+        "fixture://northstar/storefront.json#/surfaces/product_return_badge"
+      ],
+      "kind": "EVIDENCE",
+      "source_agent_id": "storefront-auditor",
+      "statement": "storefront.product_return_badge observed 30; expected 14; stale=true."
+    },
+    {
+      "can_grant_authority": false,
+      "content_hash": "sha256:05013fda25dc18b22398a601b5479bd1b69473811d0b22fff94122a975cc536f",
+      "crumb_id": "crumb_finding_checkout_001",
+      "evidence_label": "OBSERVED",
+      "evidence_refs": [
+        "fixture://northstar/storefront.json#/surfaces/checkout_help"
+      ],
+      "kind": "EVIDENCE",
+      "source_agent_id": "storefront-auditor",
+      "statement": "storefront.checkout_help observed 30; expected 14; stale=true."
+    },
+    {
+      "can_grant_authority": false,
+      "content_hash": "sha256:8745bfaf6070ccf38ad4c89baa520e335ca2e748d634e15a900b639ed708d4c6",
+      "crumb_id": "crumb_finding_support_001",
+      "evidence_label": "OBSERVED",
+      "evidence_refs": [
+        "fixture://northstar/support.json"
+      ],
+      "kind": "EVIDENCE",
+      "source_agent_id": "storefront-auditor",
+      "statement": "support.returns_answer observed 30; expected 14; stale=true."
+    }
+  ],
+  "edges": [
+    {
+      "relation": "MIRRORS",
+      "source": "policy.returns_window",
+      "target": "db.return_window_days"
+    },
+    {
+      "relation": "SURFACES",
+      "source": "policy.returns_window",
+      "target": "storefront.product_return_badge"
+    },
+    {
+      "relation": "SURFACES",
+      "source": "policy.returns_window",
+      "target": "storefront.checkout_help"
+    },
+    {
+      "relation": "INFORMS",
+      "source": "policy.returns_window",
+      "target": "support.returns_answer"
+    },
+    {
+      "relation": "VALIDATES",
+      "source": "db.return_window_days",
+      "target": "mission.return_policy_compliance"
+    },
+    {
+      "relation": "VALIDATES",
+      "source": "storefront.product_return_badge",
+      "target": "mission.return_policy_compliance"
+    },
+    {
+      "relation": "VALIDATES",
+      "source": "storefront.checkout_help",
+      "target": "mission.return_policy_compliance"
+    },
+    {
+      "relation": "VALIDATES",
+      "source": "support.returns_answer",
+      "target": "mission.return_policy_compliance"
+    },
+    {
+      "relation": "DECLARES",
+      "source": "catalog.product_name",
+      "target": "marketing.hero_banner"
+    },
+    {
+      "relation": "INFORMS",
+      "source": "catalog.product_price",
+      "target": "analytics.conversion_event"
+    },
+    {
+      "relation": "INFORMS",
+      "source": "inventory.stock_status",
+      "target": "shipping.delivery_estimate"
+    }
+  ],
+  "findings": [
+    {
+      "agent_id": "policy-auditor",
+      "disposition": "VALID",
+      "evidence_label": "VERIFIED",
+      "evidence_refs": [
+        "fixture://northstar/policy.json"
+      ],
+      "expected_value": 14,
+      "finding_id": "finding_policy_001",
+      "node_id": "policy.returns_window",
+      "observed_value": 14,
+      "stale": false
+    },
+    {
+      "agent_id": "data-auditor",
+      "disposition": "VALID",
+      "evidence_label": "VERIFIED",
+      "evidence_refs": [
+        "fixture://northstar/database.json"
+      ],
+      "expected_value": 14,
+      "finding_id": "finding_database_001",
+      "node_id": "db.return_window_days",
+      "observed_value": 14,
+      "stale": false
+    },
+    {
+      "agent_id": "storefront-auditor",
+      "disposition": "VALID",
+      "evidence_label": "OBSERVED",
+      "evidence_refs": [
+        "fixture://northstar/storefront.json#/surfaces/product_return_badge"
+      ],
+      "expected_value": 14,
+      "finding_id": "finding_product_001",
+      "node_id": "storefront.product_return_badge",
+      "observed_value": 30,
+      "stale": true
+    },
+    {
+      "agent_id": "storefront-auditor",
+      "disposition": "VALID",
+      "evidence_label": "OBSERVED",
+      "evidence_refs": [
+        "fixture://northstar/storefront.json#/surfaces/checkout_help"
+      ],
+      "expected_value": 14,
+      "finding_id": "finding_checkout_001",
+      "node_id": "storefront.checkout_help",
+      "observed_value": 30,
+      "stale": true
+    },
+    {
+      "agent_id": "storefront-auditor",
+      "disposition": "VALID",
+      "evidence_label": "OBSERVED",
+      "evidence_refs": [
+        "fixture://northstar/support.json"
+      ],
+      "expected_value": 14,
+      "finding_id": "finding_support_001",
+      "node_id": "support.returns_answer",
+      "observed_value": 30,
+      "stale": true
+    }
+  ],
+  "nodes": [
+    {
+      "affected": false,
+      "agent_id": "policy-auditor",
+      "display_name": "Returns policy",
+      "kind": "policy",
+      "node_id": "policy.returns_window",
+      "status": "CURRENT"
+    },
+    {
+      "affected": true,
+      "agent_id": "data-auditor",
+      "display_name": "Policy database",
+      "kind": "database",
+      "node_id": "db.return_window_days",
+      "status": "CURRENT"
+    },
+    {
+      "affected": true,
+      "agent_id": "storefront-auditor",
+      "display_name": "Product return badge",
+      "kind": "surface",
+      "node_id": "storefront.product_return_badge",
+      "status": "STALE"
+    },
+    {
+      "affected": true,
+      "agent_id": "storefront-auditor",
+      "display_name": "Checkout help",
+      "kind": "surface",
+      "node_id": "storefront.checkout_help",
+      "status": "STALE"
+    },
+    {
+      "affected": true,
+      "agent_id": "storefront-auditor",
+      "display_name": "Support returns answer",
+      "kind": "surface",
+      "node_id": "support.returns_answer",
+      "status": "STALE"
+    },
+    {
+      "affected": true,
+      "agent_id": "independent-verifier",
+      "display_name": "Return-policy compliance mission",
+      "kind": "mission",
+      "node_id": "mission.return_policy_compliance",
+      "status": "STALE"
+    },
+    {
+      "affected": false,
+      "agent_id": null,
+      "display_name": "Catalog product name",
+      "kind": "unrelated",
+      "node_id": "catalog.product_name",
+      "status": "UNTOUCHED"
+    },
+    {
+      "affected": false,
+      "agent_id": null,
+      "display_name": "Catalog product price",
+      "kind": "unrelated",
+      "node_id": "catalog.product_price",
+      "status": "UNTOUCHED"
+    },
+    {
+      "affected": false,
+      "agent_id": null,
+      "display_name": "Inventory stock status",
+      "kind": "unrelated",
+      "node_id": "inventory.stock_status",
+      "status": "UNTOUCHED"
+    },
+    {
+      "affected": false,
+      "agent_id": null,
+      "display_name": "Shipping estimate",
+      "kind": "unrelated",
+      "node_id": "shipping.delivery_estimate",
+      "status": "UNTOUCHED"
+    },
+    {
+      "affected": false,
+      "agent_id": null,
+      "display_name": "Marketing hero",
+      "kind": "unrelated",
+      "node_id": "marketing.hero_banner",
+      "status": "UNTOUCHED"
+    },
+    {
+      "affected": false,
+      "agent_id": null,
+      "display_name": "Conversion analytics",
+      "kind": "unrelated",
+      "node_id": "analytics.conversion_event",
+      "status": "UNTOUCHED"
+    }
+  ],
+  "receipt": null,
+  "repair": null,
+  "run": {
+    "fixture": true,
+    "phase": "AUTHORITY_REVIEW",
+    "run_id": "run_demo_001",
+    "started_at": "2026-08-31T12:04:18Z"
+  },
+  "verification": null,
+  "watchzone_summary": {
+    "affected_node_ids": [
+      "db.return_window_days",
+      "storefront.checkout_help",
+      "storefront.product_return_badge",
+      "support.returns_answer",
+      "mission.return_policy_compliance"
+    ],
+    "affected_nodes": 5,
+    "dispatched_agents": 3,
+    "selective_work_reduction": 0.583333,
+    "skipped_nodes": 7,
+    "total_nodes": 12
+  }
+}

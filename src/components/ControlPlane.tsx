@@ -24,7 +24,7 @@ function TopBar({ view }: { view: HackathonView }) {
       <span className="fixture-badge">SYNTHETIC ENTERPRISE FIXTURE</span>
       <div className="run-summary"><span>Golden Run</span><strong>{view.summary}</strong></div>
       <div className="topbar-actions">
-        {!view.cloudProof && <span className="local-proof" title="No cloud execution data supplied"><CloudSlash aria-hidden="true" />Local fixture</span>}
+        {!view.cloudProof.cloudRun && !view.cloudProof.firestore && <span className="local-proof" title="No cloud execution data supplied"><CloudSlash aria-hidden="true" />Local fixture</span>}
         <a href={`/store?state=${view.index}`} className="surface-link"><Browser aria-hidden="true" />Inspect surface</a>
         <span className={`run-status run-status-${view.index}`}><Pulse aria-hidden="true" />{view.runStatus}</span>
       </div>
@@ -106,7 +106,7 @@ function FleetRail({ view }: { view: HackathonView }) {
     <aside className="fleet-rail" aria-labelledby="fleet-heading">
       <header className="fleet-heading"><div><SectionLabel>Actors</SectionLabel><h2 id="fleet-heading">Agent fleet</h2></div><span>{activeCount} active</span></header>
       <div className="agent-list">
-        {view.agents.map((agent) => <AgentCard key={agent.id} agent={agent} verifier={agent.id === 'verifier-agent'} />)}
+        {view.agents.map((agent) => <AgentCard key={agent.id} agent={agent} verifier={agent.id === 'independent-verifier'} />)}
       </div>
     </aside>
   )

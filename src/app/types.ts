@@ -62,7 +62,7 @@ export interface EvidenceData {
   type: EvidenceType
   statement: string
   source: string
-  timestamp: string
+  timestamp: string | null
   confidence?: number
 }
 
@@ -85,6 +85,8 @@ export interface VerificationData {
   checksComplete: number
   checksTotal: number
   startedAt?: string
+  independent: boolean
+  receivedImplementerNarrative: boolean
 }
 
 export interface ReceiptData {
@@ -101,7 +103,8 @@ export interface ReceiptData {
 }
 
 export interface HackathonView {
-  schemaVersion: 'route-b.fixture.v2'
+  schemaVersion: 'hackathon-view-v1.presentation'
+  sourcePhase: string
   snapshot: SnapshotKey
   index: number
   screenLabel: string
@@ -132,14 +135,14 @@ export interface HackathonView {
   triggerCrumb: null | {
     id: string
     label: string
-    timestamp: string
+    timestamp: string | null
   }
   authority: AuthorityData | null
   verification: VerificationData | null
   receipt: ReceiptData | null
-  cloudProof: null | {
-    provider: string
-    executionId: string
-    persistenceId: string
+  cloudProof: {
+    cloudRun: boolean
+    firestore: boolean
+    evidenceRefs: string[]
   }
 }

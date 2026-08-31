@@ -31,9 +31,10 @@ def build_receipt(
         "before": repair["before"],
         "after": repair["after"],
         "postconditions": verification["checks"],
-        "regression_result": "PASS" if all(item["passed"] for item in verification["checks"]) else "FAIL",
+        "regression_result": (
+            "PASS" if all(item["passed"] for item in verification["checks"]) else "FAIL"
+        ),
         "frozen_input_hash": sha256_prefixed(frozen_inputs),
         "frozen_result_hash": sha256_prefixed(frozen_results),
     }
     return {**receipt, "receipt_hash": sha256_prefixed(receipt)}
-

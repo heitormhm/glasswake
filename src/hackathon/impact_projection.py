@@ -5,7 +5,6 @@ from typing import Any
 
 from .agent_catalog import CATALOG_BY_ID
 
-
 SUBJECT_TO_NODE = {"policy.returns_window_days": "policy.returns_window"}
 
 

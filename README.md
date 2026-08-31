@@ -1,22 +1,55 @@
-# GlassWake Route B frontend
+# GlassWake — KANON PULSE Route A
 
-Executable UI/UX implementation of the GlassWake enterprise memory-integrity control plane and Northstar Supply fixture.
+This workspace contains the smallest deterministic backend vertical slice for the GlassWake Devpost MVP. The only scenario is Northstar Supply's returns-policy change from 30 days to 14 days.
 
-## Run
+The proof chain is:
 
-```bash
-npm install
-npm run dev
+`CHANGE → TriggerCrumb → selective impact → specialist fleet → evidence → authority gate → bounded repair → independent fresh verify → Receipt`
+
+## Current status
+
+- Local deterministic backend: implemented and covered by fresh tests.
+- `HackathonView`: frozen JSON Schema plus ten fixture snapshots.
+- Google ADK and Gemini: real optional integration code; live model call not performed.
+- Cloud Run and Firestore: deployable/persistent path implemented; no deployment or cloud write performed.
+- Route B: the Vite/React control plane is preserved and now consumes the canonical snapshots through an explicit `HackathonView` adapter.
+
+## Local verification
+
+```text
+uv sync --extra dev --extra api --extra google
+uv run pytest
+uv run ruff check src tests services
+uv run glasswake-golden-path --write
 ```
 
-Open `http://127.0.0.1:5173/control-plane`. Use the footer sequencer for S0–S8 or pass `?state=0..8`.
+Run the local API:
 
-## Verify
+```text
+uv run uvicorn services.cloud_api.main:app --host 127.0.0.1 --port 8080
+```
 
-```bash
+Important endpoints:
+
+- `GET /healthz`
+- `GET /v1/agent-catalog`
+- `GET /v1/demo/snapshots`
+- `GET /v1/demo/snapshots/{state}`
+- `POST /v1/demo/replay`
+- `POST /v1/gemini/review` — live and credential-dependent; not used by deterministic tests
+
+The guarded deploy path is documented in `docs/CLOUD_PROOF.md`. Do not deploy, enter credentials, enable billing, publish or submit without separate owner authority.
+
+## Route B frontend
+
+The Vite/React control plane now consumes the frozen Route A snapshots through `src/app/routeAAdapter.ts`; the provisional presentation fixture is no longer treated as the backend source of truth.
+
+```text
+npm install
+npm run dev
 npm run test:run
 npm run build
 npm run capture
 ```
 
-Routes and design contracts are documented in `docs/`.
+Open `/control-plane` for the S0–S8 sequencer. The consumer fixture is available at `/store`, `/store/product/NST-BAG-001`, and `/store/checkout-help`. Frontend binding and design contracts are documented in `docs/HACKATHON_VIEW_BINDING.md`, `docs/UI_INFORMATION_ARCHITECTURE.md`, `docs/DESIGN_TOKENS.md`, and `docs/DEMO_SCREEN_STATES.md`.

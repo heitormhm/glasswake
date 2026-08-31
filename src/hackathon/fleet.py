@@ -25,7 +25,6 @@ from .repair_policy import (
     build_repair_brief,
 )
 
-
 RUN_ID = "run_demo_001"
 STARTED_AT = "2026-08-31T12:04:18Z"
 RECEIPT_AT = "2026-08-31T12:04:25Z"
@@ -59,7 +58,9 @@ class IndependentVerifier:
         implementer_narrative: str | None = None,
     ) -> dict[str, Any]:
         if implementer_narrative is not None:
-            raise ValueError("Independent verifier may not receive implementer diagnosis narrative.")
+            raise ValueError(
+                "Independent verifier may not receive implementer diagnosis narrative."
+            )
         fresh_state = copy.deepcopy(fixture_state)
         checks = []
         for node_id, path, expected in postconditions:
@@ -369,7 +370,9 @@ class GoldenPathRunner:
         findings = self._findings(state)
         finding_projection = [finding.to_projection() for finding in findings]
         evidence_crumbs = self._evidence_crumbs(findings)
-        crumb_projection = [trigger.to_projection()] + [crumb.to_projection() for crumb in evidence_crumbs]
+        crumb_projection = [trigger.to_projection()] + [
+            crumb.to_projection() for crumb in evidence_crumbs
+        ]
         finding_statuses = self._node_statuses(findings, "findings")
         snapshots["findings_complete"] = self._base_view(
             phase="FINDINGS_COMPLETE",
@@ -542,4 +545,3 @@ class GoldenPathRunner:
             path.write_text(json.dumps(view, indent=2, sort_keys=True) + "\n")
             paths[name] = path
         return paths
-

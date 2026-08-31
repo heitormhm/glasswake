@@ -43,7 +43,7 @@ function EvidenceRows({ rows }: { rows: EvidenceData[] }) {
             <strong>{row.statement}</strong>
             <span>{row.source}</span>
           </div>
-          <time>{row.timestamp}</time>
+          <time>{row.timestamp ?? 'Not supplied'}</time>
           <button type="button" className="icon-button" aria-label={`Copy evidence identifier ${row.id}`} title={row.id}>
             <ClipboardText aria-hidden="true" />
           </button>
@@ -64,7 +64,7 @@ function CrumbsPanel({ view }: { view: HackathonView }) {
       <dl>
         <div><dt>Source</dt><dd>Policy Service</dd></div>
         <div><dt>Identifier</dt><dd>{view.triggerCrumb.id}</dd></div>
-        <div><dt>Observed</dt><dd>{view.triggerCrumb.timestamp}</dd></div>
+        <div><dt>Observed</dt><dd>{view.triggerCrumb.timestamp ?? 'Run context'}</dd></div>
       </dl>
     </div>
   )
@@ -109,7 +109,7 @@ function VerificationPanel({ verification }: { verification: VerificationData | 
       <div className="verification-main">
         <SectionLabel>Independent verifier · fresh run</SectionLabel>
         <h3>{verification.label}</h3>
-        <p>Run {verification.runId} started from a new post-repair projection.</p>
+        <p>Run {verification.runId} · independent {verification.independent ? 'confirmed' : 'not confirmed'} · implementer narrative {verification.receivedImplementerNarrative ? 'received' : 'not received'}.</p>
       </div>
       <div className="verification-progress">
         <span>{verification.checksComplete} / {verification.checksTotal} checks</span>

@@ -14,10 +14,15 @@ describe('HackathonView golden fixtures', () => {
     expect(baseline.triggerCrumb).toBeNull()
   })
 
-  it('projects stale surfaces only after auditors observed them', () => {
+  it('projects stale surfaces and their compliance mission only after findings complete', () => {
     const stale = getSnapshot(4)
     const staleIds = stale.graph.nodes.filter((node) => node.state === 'stale').map((node) => node.id)
-    expect(staleIds).toEqual(['bag-page', 'checkout-help'])
+    expect(staleIds).toEqual([
+      'storefront.product_return_badge',
+      'storefront.checkout_help',
+      'support.returns_answer',
+      'mission.return_policy_compliance',
+    ])
     expect(stale.receipt).toBeNull()
     expect(stale.verification).toBeNull()
   })
@@ -29,17 +34,18 @@ describe('HackathonView golden fixtures', () => {
     expect(repair.verification).toBeNull()
   })
 
-  it('separates fresh verification from the repair phase', () => {
+  it('separates fresh verification from the repair phase without implementer narrative', () => {
     const verifying = getSnapshot(7)
-    expect(verifying.verification?.status).toBe('running')
-    expect(verifying.agents.find((agent) => agent.id === 'verifier-agent')?.status).toBe('RUNNING')
+    expect(verifying.verification?.status).toBe('verified')
+    expect(verifying.verification?.independent).toBe(true)
+    expect(verifying.verification?.receivedImplementerNarrative).toBe(false)
     expect(verifying.receipt).toBeNull()
   })
 
   it('renders a receipt only after every postcondition passes', () => {
     const complete = getSnapshot(8)
     expect(complete.verification?.status).toBe('verified')
-    expect(complete.receipt?.verificationResult).toBe('4 of 4 postconditions passed')
-    expect(complete.cloudProof).toBeNull()
+    expect(complete.receipt?.verificationResult).toBe('5 of 5 postconditions passed')
+    expect(complete.cloudProof).toEqual({ cloudRun: false, firestore: false, evidenceRefs: [] })
   })
 })

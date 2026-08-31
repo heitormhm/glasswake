@@ -46,7 +46,7 @@ export function ImpactMap({ view }: { view: HackathonView }) {
           <Pulse weight="bold" aria-hidden="true" />
           <div>
             <strong>{view.triggerCrumb.label}</strong>
-            <span>{view.triggerCrumb.id} · {view.triggerCrumb.timestamp}</span>
+            <span>{view.triggerCrumb.id}{view.triggerCrumb.timestamp ? ` · ${view.triggerCrumb.timestamp}` : ''}</span>
           </div>
           <ArrowRight aria-hidden="true" />
         </div>

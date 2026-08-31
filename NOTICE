@@ -1,0 +1,15 @@
+GlassWake KANON PULSE Route A
+
+This consolidation contains new implementation code informed by pre-existing owner-controlled
+GlassWake, GlassCP, SailorCP and Crumbonaut work. Exact source revisions, paths, classifications
+and reuse decisions are recorded in docs/REUSE_MATRIX.md and docs/DEVPOST_DISCLOSURE.md.
+
+The Crumbonaut S03 canonical worktree identifies its source as Apache-2.0 and includes the notice:
+"GlassCP Agent Lens Starter — Copyright 2026 GlassCP contributors". Route A adapts small design
+invariants such as deterministic canonical hashing, bounded RepairBriefs, LoopGuard semantics and
+independent verification. It does not copy the historical repository wholesale.
+
+The GlassWake source repository is marked "All Rights Reserved - private R&D pending IP review".
+Route A uses independently written compatible equivalents and does not grant permission to publish
+the underlying private R&D code. Public distribution or Devpost publication requires owner/IP review.
+

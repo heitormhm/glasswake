@@ -33,7 +33,7 @@ dev = [
 glasswake-golden-path = "hackathon.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hackathon"]
+packages = ["src/hackathon", "services"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -45,4 +45,3 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-

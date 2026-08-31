@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 from .models import AgentStatus, AuthorityDecision, EvidenceLabel, FindingDisposition
-
 
 TOP_LEVEL_FIELDS = {
     "run",
@@ -26,7 +26,17 @@ TOP_LEVEL_FIELDS = {
 
 
 def project_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    candidates = []
+    configured = os.getenv("GLASSWAKE_PROJECT_ROOT")
+    if configured:
+        candidates.append(Path(configured))
+    candidates.extend((Path.cwd(), Path(__file__).resolve().parents[2]))
+    for candidate in candidates:
+        if (candidate / "contracts" / "hackathon_view.schema.json").is_file() and (
+            candidate / "fixtures" / "northstar"
+        ).is_dir():
+            return candidate
+    raise RuntimeError("Unable to locate the GlassWake contract and fixture root.")
 
 
 def schema_path() -> Path:
@@ -74,4 +84,3 @@ def validate_with_json_schema(view: dict[str, Any]) -> None:
         raise RuntimeError("Install the dev extra to run JSON Schema validation.") from exc
     schema = json.loads(schema_path().read_text())
     jsonschema.Draft202012Validator(schema).validate(view)
-

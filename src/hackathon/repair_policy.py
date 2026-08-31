@@ -6,9 +6,13 @@ from typing import Any
 
 from .models import AuthorityDecision, Finding, canonical_json, sha256_prefixed
 
-
 ALLOWED_REPAIR_PATHS = {
-    "storefront.product_return_badge": ("storefront", "surfaces", "product_return_badge", "returns_window_days"),
+    "storefront.product_return_badge": (
+        "storefront",
+        "surfaces",
+        "product_return_badge",
+        "returns_window_days",
+    ),
     "storefront.checkout_help": ("storefront", "surfaces", "checkout_help", "returns_window_days"),
     "support.returns_answer": ("support", "returns_window_days"),
 }
@@ -25,7 +29,11 @@ class RepairBrief:
 
 def build_repair_brief(findings: list[Finding], target_value: int) -> RepairBrief:
     stale_paths = tuple(
-        sorted(finding.node_id for finding in findings if finding.stale and finding.node_id in ALLOWED_REPAIR_PATHS)
+        sorted(
+            finding.node_id
+            for finding in findings
+            if finding.stale and finding.node_id in ALLOWED_REPAIR_PATHS
+        )
     )
     if not stale_paths:
         raise ValueError("No allowed stale synthetic paths require repair.")
@@ -54,7 +62,9 @@ def authority_projection(brief: RepairBrief) -> dict[str, Any]:
         "allowed_paths": list(brief.allowed_paths),
         "evidence_refs": list(brief.evidence_refs),
         "rollback_required": brief.rollback_required,
-        "reason": "One bounded synthetic RepairBrief covers only the stale returns-policy surfaces.",
+        "reason": (
+            "One bounded synthetic RepairBrief covers only the stale returns-policy surfaces."
+        ),
     }
 
 
@@ -132,4 +142,3 @@ class LoopGuard:
             "observations": len(self._history),
             "fingerprint": sha256_prefixed(canonical_json(self._history)),
         }
-

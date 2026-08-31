@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from .models import AgentDefinition, AgentStatus
 
-
 AGENT_CATALOG: tuple[AgentDefinition, ...] = (
     AgentDefinition(
         agent_id="change-sentinel",
