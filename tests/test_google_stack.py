@@ -203,3 +203,28 @@ def test_v1_health_matches_healthz_and_binds_the_same_contract():
     assert versioned.json() == legacy.json()
     assert versioned.json()["contract_sha256"] == schema_sha256()
 
+
+def test_snapshot_endpoint_stamps_the_serving_cloud_run_revision(monkeypatch):
+    monkeypatch.setenv("K_SERVICE", "glasswake-kanon-pulse")
+    monkeypatch.setenv("K_REVISION", "glasswake-kanon-pulse-00004-w8k")
+    client = TestClient(app)
+
+    # The control plane renders from the snapshot endpoints, so the origin's own
+    # evidence has to reach them or a cloud-served demo reports itself as local.
+    view = client.get("/v1/demo/snapshots/idle").json()
+    assert view["cloud_proof"]["cloud_run"] is True
+    assert (
+        "cloud-run://glasswake-kanon-pulse/revisions/glasswake-kanon-pulse-00004-w8k"
+        in view["cloud_proof"]["evidence_refs"]
+    )
+    # Serving a snapshot must never imply a Firestore write.
+    assert view["cloud_proof"]["firestore"] is False
+
+
+def test_snapshot_endpoint_claims_nothing_when_not_on_cloud_run(monkeypatch):
+    monkeypatch.delenv("K_SERVICE", raising=False)
+    monkeypatch.delenv("K_REVISION", raising=False)
+
+    view = TestClient(app).get("/v1/demo/snapshots/idle").json()
+    assert view["cloud_proof"] == {"cloud_run": False, "firestore": False, "evidence_refs": []}
+

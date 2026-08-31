@@ -76,9 +76,24 @@ def list_snapshots() -> dict[str, Any]:
 def get_snapshot(state: str) -> dict[str, Any]:
     snapshots = _snapshots()
     try:
-        return snapshots[state]
+        view = snapshots[state]
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Unknown golden snapshot state.") from exc
+    return _mark_cloud_run(view)
+
+
+def _mark_cloud_run(view: dict[str, Any]) -> dict[str, Any]:
+    """Stamp a view with the Cloud Run revision serving it, if any.
+
+    Free and side-effect-free: it reads the runtime's own injected environment.
+    Firestore evidence is deliberately not added here, because serving a
+    snapshot must never trigger a write.
+    """
+    ref = _cloud_run_ref()
+    if ref:
+        view["cloud_proof"]["cloud_run"] = True
+        view["cloud_proof"]["evidence_refs"].append(ref)
+    return view
 
 
 def _cloud_run_ref() -> str | None:
@@ -110,11 +125,7 @@ def replay() -> dict[str, Any]:
     else:
         raise HTTPException(status_code=500, detail="Unsupported GLASSWAKE_STORE mode.")
 
-    cloud_ref = _cloud_run_ref()
-    if cloud_ref:
-        view["cloud_proof"]["cloud_run"] = True
-        view["cloud_proof"]["evidence_refs"].append(cloud_ref)
-    return view
+    return _mark_cloud_run(view)
 
 
 @app.post("/v1/gemini/review")
@@ -192,8 +203,6 @@ def _attach_cloud_proof(views: dict[str, dict[str, Any]]) -> None:
     persistence is best-effort: a write failure costs the run its persistence
     evidence, never the run itself.
     """
-    cloud_ref = _cloud_run_ref()
-
     firestore_refs: list[str] = []
     if os.getenv("GLASSWAKE_STORE") == "firestore":
         try:
@@ -204,10 +213,7 @@ def _attach_cloud_proof(views: dict[str, dict[str, Any]]) -> None:
             firestore_refs = []
 
     for view in views.values():
-        proof = view["cloud_proof"]
-        if cloud_ref:
-            proof["cloud_run"] = True
-            proof["evidence_refs"].append(cloud_ref)
+        proof = _mark_cloud_run(view)["cloud_proof"]
         if firestore_refs:
             proof["firestore"] = True
             proof["evidence_refs"].extend(firestore_refs)

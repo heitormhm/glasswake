@@ -16,7 +16,9 @@ export type RouteADataSourceState =
   | {
       kind: 'live'
       source: 'api'
-      label: 'Local API validated'
+      label: 'Local API validated' | 'Cloud Run validated'
+      cloudRun: boolean
+      revision: string | null
       detail: string
       apiBaseUrl: string
       contractHash: string
@@ -131,13 +133,23 @@ export function useRouteASequence({
       .then(({ loadRouteASequence }) => loadRouteASequence({ apiBaseUrl, signal: controller.signal }))
       .then((connection) => {
         if (controller.signal.aborted) return
+        // Cloud Run injects K_SERVICE/K_REVISION into its own runtime, so the
+        // backend's cloud_proof is the origin's evidence, not a guess from the
+        // URL. Never label a run "Cloud Run" without it.
+        const cloudRun = connection.snapshots.some((snapshot) => snapshot.cloudProof.cloudRun)
+        const revision = connection.snapshots
+          .flatMap((snapshot) => snapshot.cloudProof.evidenceRefs)
+          .find((ref) => ref.startsWith('cloud-run://'))
+          ?.split('/revisions/')[1] ?? null
         setState({
           snapshots: connection.snapshots,
           dataSource: {
             kind: 'live',
             source: 'api',
-            label: 'Local API validated',
-            detail: `${connection.metadata.statesValidated}/9 canonical states passed schema and sequence validation.`,
+            label: cloudRun ? 'Cloud Run validated' : 'Local API validated',
+            detail: `${connection.metadata.statesValidated}/9 canonical states passed schema and sequence validation${cloudRun && revision ? ` on revision ${revision}` : ''}.`,
+            cloudRun,
+            revision,
             ...connection.metadata,
           },
         })

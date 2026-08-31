@@ -122,4 +122,35 @@ describe('Route A to Route B application boundary', () => {
     expect(screen.getByText('Not started')).toBeInTheDocument()
     expect(screen.getByText('Returns policy · 30 days everywhere')).toBeInTheDocument()
   })
+
+  it('names Cloud Run as the origin only when the backend supplies its own revision evidence', async () => {
+    const revision = 'glasswake-kanon-pulse-00004-w8k'
+    loadRouteASequenceMock.mockResolvedValue({
+      ...liveConnection,
+      snapshots: snapshots.map((snapshot) => ({
+        ...snapshot,
+        cloudProof: {
+          cloudRun: true,
+          firestore: true,
+          evidenceRefs: [`cloud-run://glasswake-kanon-pulse/revisions/${revision}`],
+        },
+      })),
+    })
+    render(<App />)
+
+    expect(await screen.findByText('Cloud Run validated')).toBeInTheDocument()
+    expect(screen.getByText(`9/9 canonical states passed schema and sequence validation on revision ${revision}.`)).toBeInTheDocument()
+    expect(screen.getByText('Cloud Run')).toBeInTheDocument()
+    expect(screen.getByText(revision)).toBeInTheDocument()
+    expect(screen.queryByText('Local API')).not.toBeInTheDocument()
+  })
+
+  it('keeps calling a local origin local when no cloud evidence is supplied', async () => {
+    loadRouteASequenceMock.mockResolvedValue(liveConnection)
+    render(<App />)
+
+    expect(await screen.findByText('Local API validated')).toBeInTheDocument()
+    expect(screen.getByText('Local API')).toBeInTheDocument()
+    expect(screen.queryByText('Cloud Run validated')).not.toBeInTheDocument()
+  })
 })

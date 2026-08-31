@@ -2892,3 +2892,21 @@ time {
   font-size: 8.5px;
   letter-spacing: 0.08em;
 }
+
+/* Cloud Run execution evidence in the top bar */
+
+.cloud-proof {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid rgb(73 200 139 / 0.45);
+  border-radius: 6px;
+  color: var(--state-verified);
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.05em;
+}
+
+.cloud-proof svg { width: 13px; }
+.cloud-proof code { color: var(--text-tertiary); font-size: 8px; }

@@ -5,6 +5,7 @@ import {
   CaretRight,
   Check,
   Circle,
+  CloudCheck,
   CloudSlash,
   Fingerprint,
   Pause,
@@ -23,6 +24,11 @@ import { EvidenceDrawer } from './EvidenceDrawer'
 import { ImpactMap } from './ImpactMap'
 import { SectionLabel, StatusPill } from './Primitives'
 
+function cloudRunRevision(view: HackathonView): string | null {
+  const ref = view.cloudProof.evidenceRefs.find((value) => value.startsWith('cloud-run://'))
+  return ref?.split('/revisions/')[1] ?? null
+}
+
 function TopBar({
   view,
   sourcePreference,
@@ -38,7 +44,9 @@ function TopBar({
       <span className="fixture-badge">SYNTHETIC ENTERPRISE FIXTURE</span>
       <div className="run-summary"><span>Golden Run</span><strong>{view.summary}</strong></div>
       <div className="topbar-actions">
-        {!view.cloudProof.cloudRun && !view.cloudProof.firestore && <span className="local-proof" title="No cloud execution data supplied"><CloudSlash aria-hidden="true" />{transportSource === 'api' ? 'Local API' : 'Local fixture'}</span>}
+        {view.cloudProof.cloudRun
+          ? <span className="cloud-proof" title={view.cloudProof.evidenceRefs.filter((ref) => ref.startsWith('cloud-run://')).join(' ')}><CloudCheck weight="bold" aria-hidden="true" />Cloud Run{cloudRunRevision(view) ? <code>{cloudRunRevision(view)}</code> : null}</span>
+          : <span className="local-proof" title="No cloud execution data supplied"><CloudSlash aria-hidden="true" />{transportSource === 'api' ? 'Local API' : 'Local fixture'}</span>}
         <a href={demoHref('/store', view.index, sourcePreference)} className="surface-link"><Browser aria-hidden="true" />Inspect surface</a>
         <span className={`run-status run-status-${view.index}`}><Pulse aria-hidden="true" />{view.runStatus}</span>
       </div>
