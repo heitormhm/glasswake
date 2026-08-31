@@ -3837,3 +3837,62 @@ time {
 .node-outcome { padding-left: 2px; }
 
 .theme-light .drawer-title { background: transparent; border-right: 0; }
+
+/* ==========================================================================
+   Ledger reform: contained text, height-hugging panels, stable tab cells,
+   light-theme contrast everywhere inside the card
+   ========================================================================== */
+
+/* Tab cells: identical box in every state; only the ink and fill change. */
+
+.theme-light .drawer-tabs button,
+.theme-light .drawer-tabs button.active {
+  min-width: 92px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  line-height: 1.2;
+}
+
+/* Content hugs its height instead of floating in dead space. */
+
+.page-layout .drawer-content {
+  min-height: 0;
+  padding: 18px 22px 20px;
+}
+
+.page-layout .drawer-empty { min-height: 120px; height: auto; padding: 18px 0; }
+
+/* Authority: the surface chips become light, bordered, and legible. */
+
+.theme-light .surface-scope > div {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-inset);
+}
+
+.theme-light .surface-scope strong { color: var(--text-primary); }
+.theme-light .surface-scope small { color: var(--text-tertiary); }
+.theme-light .surface-scope > div > svg { color: var(--state-verified); }
+
+/* Findings: meta column contained with breathing room at the card edge. */
+
+.theme-light .evidence-row time { color: var(--text-tertiary); }
+.theme-light .evidence-row { border-color: var(--border-subtle); }
+.page-layout .evidence-list { padding-right: 4px; }
+
+/* Crumbs and verification: distribute across the row instead of sinking. */
+
+.page-layout .crumb-detail,
+.page-layout .verification-panel {
+  align-items: center;
+}
+
+.theme-light .crumb-detail h3,
+.theme-light .verification-main h3 { color: var(--text-primary); }
+.theme-light .crumb-detail dd { color: var(--text-secondary); }
+.theme-light .verification-progress span { color: var(--text-secondary); }
+.theme-light .authority-summary h3 { color: var(--text-primary); }
+.theme-light .authority-scope strong { color: var(--text-primary); }
+.theme-light .authority-scope span { color: var(--text-tertiary); }
+.theme-light .independence-note { color: var(--text-tertiary); }
+.theme-light .decision-code { color: var(--state-verified); border-color: rgb(23 122 79 / 0.4); }
