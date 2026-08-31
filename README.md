@@ -71,6 +71,57 @@ Gemma sits **before** the core and can only propose. The authority gate,
 the adapter, and the verifier are the only components that may decide, mutate,
 and prove respectively — and no two of those are the same component.
 
+## Proof of action — a real external side effect
+
+GlassWake does not recommend a repair. It performs one bounded action against a
+**separately deployed service** and then proves the side effect by re-reading it.
+
+```text
+Authority Gate  --REPAIR_1-->  ExternalActionBroker
+                                      |
+                                      | authenticated HTTPS + Idempotency-Key
+                                      v
+                        northstar-sandbox (its own Cloud Run service)
+                                      |
+                                      | fresh anonymous GET
+                                      v
+                          Independent Verifier  -->  receipt
+```
+
+Anyone can verify the side effect without GlassWake in the loop:
+
+```bash
+curl https://northstar-sandbox-701830159437.us-central1.run.app/api/v1/products/NST-BAG-001
+```
+
+Observed in the cloud: `30 days, version 1` before the action; `14 days,
+version 2` after. A retry returns `ALREADY_APPLIED` and the version stays at 2.
+An action aimed at the authoritative policy source is refused with
+`Surface 'policy.returns_window' is outside the repair allowlist` and
+`action_id: None` — no request ever leaves the process.
+
+The invariant this establishes:
+
+> A model recommendation is not an action. An action requires an explicit
+> grant, a bounded adapter, an externally observable side effect, and fresh
+> post-action verification.
+
+The verifier never trusts the mutation's own `"status": "APPLIED"`; its result
+carries `trusted_action_response: false`. A fresh read that fails is a failed
+verification, never an assumed success, so a receipt cannot follow.
+
+## What is real and what is synthetic
+
+**Northstar Supply is a synthetic merchant sandbox** created for this demo. It
+does not represent a real company or a production commerce integration. The
+business data is simulated.
+
+**The action is not simulated.** The orchestration, the deterministic authority
+grant, the authenticated cross-service HTTPS mutation, the idempotency
+protection, the independent fresh read, the Firestore persistence and the
+receipt all execute for real, across two independently deployed Cloud Run
+services.
+
 ## Additional Google AI models
 
 Four beyond the mandatory Gemini, each integrated and evidenced in code, tests

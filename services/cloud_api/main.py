@@ -13,6 +13,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from hackathon.agent_catalog import catalog_projection
 from hackathon.contracts import schema_sha256
+from hackathon.external_action import (
+    AUTHORIZED_PRODUCT,
+    AUTHORIZED_SURFACE,
+    AUTHORIZED_TARGET_VALUE,
+    ExternalActionRequest,
+    NorthstarActionBroker,
+)
 from hackathon.fleet import SNAPSHOT_STATES, GoldenPathRunner
 from hackathon.google_stack.derived_plane import DerivedIntelligencePlane, executive_script
 from hackathon.google_stack.firestore_store import FirestoreRunStore, InMemoryRunStore
@@ -347,4 +354,65 @@ def derived_output(kind: str) -> dict[str, Any]:
     payload = output.projection()
     if output.media_base64:
         payload["media_base64"] = output.media_base64
+    return payload
+
+
+@app.get("/v1/demo/external/state")
+def external_state() -> dict[str, Any]:
+    """Read the external merchant surface. Never cached, never inferred."""
+    broker = NorthstarActionBroker()
+    try:
+        return {"available": True, "product": broker.read_product(), "base_url": broker.base_url}
+    except Exception as exc:
+        return {"available": False, "reason": f"{type(exc).__name__}: {exc}"[:200]}
+
+
+@app.post("/v1/demo/external/reset")
+def external_reset() -> dict[str, Any]:
+    broker = NorthstarActionBroker()
+    try:
+        return {"available": True, **broker._post("/api/v1/demo/reset", {}, "reset")}
+    except Exception as exc:
+        return {"available": False, "reason": f"{type(exc).__name__}: {exc}"[:200]}
+
+
+@app.post("/v1/demo/external/action")
+def external_action(request: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Detect -> authorize -> act across the boundary -> prove by fresh read.
+
+    The receipt is withheld unless the fresh read passes. A successful mutation
+    whose verification fails yields no receipt, which is the whole point of
+    verifying separately from acting.
+    """
+    body = request or {}
+    broker = NorthstarActionBroker()
+
+    action = ExternalActionRequest(
+        run_id=body.get("run_id") or "GW-DEMO-001",
+        actor_id="storefront-auditor",
+        target_surface_id=body.get("surface_id") or AUTHORIZED_SURFACE,
+        product_id=body.get("product_id") or AUTHORIZED_PRODUCT,
+        new_return_window_days=body.get("value", AUTHORIZED_TARGET_VALUE),
+        authority_grant_id=body.get("authority_grant_id") or "repair_brief_returns_001",
+    )
+
+    before = None
+    try:
+        before = broker.read_product(action.product_id).get("return_window_days")
+    except Exception:
+        before = None
+
+    result = broker.apply(action)
+    payload: dict[str, Any] = {
+        "before": before,
+        "action": result.projection(),
+        "verification": None,
+        "receipt_sealable": False,
+    }
+    if result.status not in ("APPLIED", "ALREADY_APPLIED"):
+        return payload
+
+    verification = broker.verify_fresh(action.new_return_window_days)
+    payload["verification"] = verification.projection()
+    payload["receipt_sealable"] = verification.result == "PASS"
     return payload
