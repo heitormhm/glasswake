@@ -416,18 +416,17 @@ export function ControlPlane({
           />
         </section>
 
-        <div className="page-duo">
-          <section id="fleet" aria-label="Agent fleet">
-            <FleetRail
-              view={snapshot}
-              collapsed={collapsed.right}
-              onToggle={() => setCollapsed((value) => ({ ...value, right: !value.right }))}
-            />
-          </section>
-          <section id="ledger" aria-label="Evidence ledger">
-            <EvidenceDrawer view={snapshot} runtime={runtime} apiBaseUrl={apiBaseUrl} />
-          </section>
-        </div>
+        <section id="fleet" aria-label="Agent fleet">
+          <FleetRail
+            view={snapshot}
+            collapsed={collapsed.right}
+            onToggle={() => setCollapsed((value) => ({ ...value, right: !value.right }))}
+          />
+        </section>
+
+        <section id="ledger" aria-label="Evidence ledger">
+          <EvidenceDrawer view={snapshot} runtime={runtime} apiBaseUrl={apiBaseUrl} />
+        </section>
       </div>
     </main>
   )

@@ -849,10 +849,10 @@ time {
 .impact-node {
   position: relative;
   display: grid;
-  grid-template-columns: 22px 1fr 12px;
+  grid-template-columns: 22px 1fr auto;
   align-items: center;
   gap: 6px;
-  width: 144px;
+  width: 178px;
   height: 56px;
   padding: 0 10px;
   border: 1px solid var(--border-subtle);
@@ -3794,3 +3794,46 @@ time {
 @media (max-width: 1360px) {
   .page-layout .page-duo { grid-template-columns: 1fr; }
 }
+
+/* Navy header bands on the bento cards; the rest stays white */
+
+.theme-light .impact-heading,
+.theme-light .fleet-heading,
+.theme-light .drawer-tabs-row {
+  border-bottom: 0;
+  background: #123a63;
+}
+
+.theme-light .impact-heading .section-label,
+.theme-light .fleet-heading .section-label,
+.theme-light .drawer-title .section-label { color: #8fb3d4; }
+
+.theme-light .impact-heading h2,
+.theme-light .fleet-heading h2,
+.theme-light .drawer-title h2 { color: #ffffff; }
+
+.theme-light .fleet-heading > span { color: #cfe2f3; }
+.theme-light .map-legend span { color: #cfe2f3; }
+.theme-light .fleet-heading .rail-collapse {
+  border-color: rgb(207 226 243 / 0.35);
+  color: #cfe2f3;
+  background: transparent;
+}
+
+.theme-light .drawer-tabs button { color: #b9d4ea; }
+.theme-light .drawer-tabs button:hover { color: #ffffff; }
+.theme-light .drawer-tabs button.active {
+  border-radius: 8px;
+  color: #0d2c4d;
+  background: #7fd6ff;
+}
+.theme-light .drawer-tabs button.active::after { display: none; }
+
+/* Fleet: two per row, the verifier closes the grid on a full row */
+
+.page-layout .agent-list .agent-card:last-child { grid-column: 1 / -1; }
+
+/* Full node tags */
+.node-outcome { padding-left: 2px; }
+
+.theme-light .drawer-title { background: transparent; border-right: 0; }

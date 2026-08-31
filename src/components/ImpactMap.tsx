@@ -7,7 +7,7 @@ const outcomeLabels = { repaired: 'REPAIRED', verified: 'VERIFIED', skipped: 'SK
 
 function ImpactNode({ node }: { node: ImpactNodeData }) {
   return (
-    <foreignObject x={node.x} y={node.y} width="148" height="62">
+    <foreignObject x={node.x} y={node.y} width="182" height="62">
       <div
         className={`impact-node node-${node.state}${node.outcome ? ` outcome-${node.outcome}` : ''}`}
         role="img"
@@ -67,7 +67,7 @@ export function ImpactMap({ view }: { view: HackathonView }) {
         )}
         <svg
           className="impact-graph"
-          viewBox="0 0 970 414"
+          viewBox="0 0 1000 414"
           role="img"
           aria-labelledby="graph-title graph-description"
           preserveAspectRatio="xMidYMid meet"
@@ -88,7 +88,7 @@ export function ImpactMap({ view }: { view: HackathonView }) {
               const active = source.state !== 'unaffected' && target.state !== 'unaffected'
               const stale = target.state === 'stale'
               const verified = target.state === 'verified'
-              const sx = source.x + 148
+              const sx = source.x + 182
               const sy = source.y + 31
               const tx = target.x
               const ty = target.y + 31
