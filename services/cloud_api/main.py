@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import copy
 import os
+import time
+from collections import OrderedDict
+from datetime import UTC, datetime
 from typing import Any
+from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -94,3 +98,98 @@ def gemini_review(evidence: dict[str, Any]) -> dict[str, Any]:
     except (RuntimeError, StructuredOutputError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
+
+
+# --- Golden run lifecycle -------------------------------------------------
+#
+# A run is one real execution of GoldenPathRunner. The nine canonical phases
+# are produced by that single execution, so stepping through them is replay of
+# a recorded run, not nine independent live computations. The API says so
+# explicitly in `mode` so the demo never overstates what it is doing.
+
+GOLDEN_PHASES = SNAPSHOT_STATES[:9]
+_MAX_RUNS = 32
+
+# ponytail: process-local run store, single-instance only (maxScale=1).
+# Move to Firestore if the service ever scales past one instance.
+_runs: OrderedDict[str, dict[str, Any]] = OrderedDict()
+
+
+def _now() -> str:
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def _run_or_404(run_id: str) -> dict[str, Any]:
+    try:
+        return _runs[run_id]
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Unknown run.") from exc
+
+
+def _projection(run: dict[str, Any]) -> dict[str, Any]:
+    cursor = run["cursor"]
+    phase = GOLDEN_PHASES[cursor]
+    view = run["views"][phase]
+
+    # The receipt is closure, and closure is only earned by an independent
+    # fresh verification that already happened. Enforce that ordering here so a
+    # pipeline reordering fails loudly instead of sealing a receipt early.
+    if view.get("receipt") is not None:
+        verified = any(
+            event["phase"] == "fresh_verification" for event in run["events"]
+        )
+        if not verified:
+            raise HTTPException(
+                status_code=500,
+                detail="Receipt exposed before fresh verification was recorded.",
+            )
+
+    return {
+        "run_id": run["run_id"],
+        "mode": "replay_of_recorded_run",
+        "status": "complete" if cursor == len(GOLDEN_PHASES) - 1 else "running",
+        "cursor": cursor,
+        "phase": phase,
+        "total_phases": len(GOLDEN_PHASES),
+        "executed_at": run["executed_at"],
+        "execution_ms": run["execution_ms"],
+        "events": run["events"],
+        "view": view,
+    }
+
+
+@app.post("/v1/demo/runs")
+def create_run() -> dict[str, Any]:
+    executed_at = _now()
+    started = time.perf_counter()
+    views = _snapshots()
+    execution_ms = round((time.perf_counter() - started) * 1000, 3)
+
+    run_id = f"gw-run-{uuid4().hex[:12]}"
+    _runs[run_id] = {
+        "run_id": run_id,
+        "executed_at": executed_at,
+        "execution_ms": execution_ms,
+        "views": views,
+        "cursor": 0,
+        "events": [{"seq": 0, "phase": GOLDEN_PHASES[0], "at": _now()}],
+    }
+    while len(_runs) > _MAX_RUNS:
+        _runs.popitem(last=False)
+    return _projection(_runs[run_id])
+
+
+@app.get("/v1/demo/runs/{run_id}")
+def read_run(run_id: str) -> dict[str, Any]:
+    return _projection(_run_or_404(run_id))
+
+
+@app.post("/v1/demo/runs/{run_id}/advance")
+def advance_run(run_id: str) -> dict[str, Any]:
+    run = _run_or_404(run_id)
+    if run["cursor"] < len(GOLDEN_PHASES) - 1:
+        run["cursor"] += 1
+        run["events"].append(
+            {"seq": run["cursor"], "phase": GOLDEN_PHASES[run["cursor"]], "at": _now()}
+        )
+    return _projection(run)

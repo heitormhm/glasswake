@@ -7,6 +7,7 @@ import type {
   HackathonView,
   ImpactNodeData,
   MissionStage,
+  NodeOutcome,
   NodeState,
   ReceiptData,
   VerificationData,
@@ -189,12 +190,26 @@ function mapNodeKind(node: RawHackathonView['nodes'][number]): ImpactNodeData['k
   return 'system'
 }
 
-function adaptNodes(raw: RawHackathonView): ImpactNodeData[] {
+function outcomeFor(
+  node: RawHackathonView['nodes'][number],
+  repairedPaths: Set<string>,
+): NodeOutcome {
+  if (repairedPaths.has(node.node_id)) return 'repaired'
+  if (node.status === 'VERIFIED' || node.status === 'CURRENT') return 'verified'
+  return 'skipped'
+}
+
+function adaptNodes(raw: RawHackathonView, index: number): ImpactNodeData[] {
+  // Outcomes only exist once a repair has actually been applied; before that
+  // the node state alone is the whole truth.
+  const settled = index >= 6
+  const repairedPaths = new Set(raw.repair?.applied_paths ?? [])
   return raw.nodes.map((node) => ({
     id: node.node_id,
     label: surfaceLabels[node.node_id] ?? node.display_name,
     kind: mapNodeKind(node),
     state: statusMap[node.status],
+    outcome: settled ? outcomeFor(node, repairedPaths) : null,
     ...(nodePositions[node.node_id] ?? { x: 0, y: 0 }),
   }))
 }
@@ -339,7 +354,7 @@ export function adaptRouteAView(raw: RawHackathonView, index: number): Hackathon
     mission: missionFor(index),
     graph: {
       label: 'Demo graph',
-      nodes: adaptNodes(raw),
+      nodes: adaptNodes(raw, index),
       edges: raw.edges.map((edge) => [edge.source, edge.target] as [string, string]),
       metrics: index >= 2 ? {
         totalNodes: raw.watchzone_summary.total_nodes,

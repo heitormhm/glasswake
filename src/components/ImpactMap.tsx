@@ -3,19 +3,24 @@ import { ArrowRight, Crosshair, Path, Pulse } from '@phosphor-icons/react'
 import type { HackathonView, ImpactNodeData } from '../app/types'
 import { NodeIcon, NodeStateMark, SectionLabel } from './Primitives'
 
+const outcomeLabels = { repaired: 'REPAIRED', verified: 'VERIFIED', skipped: 'SKIPPED' } as const
+
 function ImpactNode({ node }: { node: ImpactNodeData }) {
   return (
     <foreignObject x={node.x} y={node.y} width="148" height="62">
       <div
-        className={`impact-node node-${node.state}`}
+        className={`impact-node node-${node.state}${node.outcome ? ` outcome-${node.outcome}` : ''}`}
         role="img"
-        aria-label={`${node.label}: ${node.state}`}
+        aria-label={node.outcome ? `${node.label}: ${node.state}, ${outcomeLabels[node.outcome]}` : `${node.label}: ${node.state}`}
         data-node-id={node.id}
         data-node-state={node.state}
+        data-node-outcome={node.outcome ?? undefined}
       >
         <NodeIcon kind={node.kind} size={17} />
         <span>{node.label}</span>
-        <NodeStateMark state={node.state} />
+        {node.outcome
+          ? <em className="node-outcome">{outcomeLabels[node.outcome]}</em>
+          : <NodeStateMark state={node.state} />}
       </div>
     </foreignObject>
   )
@@ -38,6 +43,7 @@ export function ImpactMap({ view }: { view: HackathonView }) {
           <span><i className="legend-dot dot-active" />Affected</span>
           <span><i className="legend-dot dot-review" />Stale</span>
           <span><i className="legend-dot dot-verified" />Verified</span>
+          <span><i className="legend-dot dot-repaired" />Repaired</span>
         </div>
       </header>
 

@@ -50,7 +50,7 @@ interface UseRouteASequenceOptions {
   apiBaseUrl?: string
 }
 
-const defaultApiBaseUrl = import.meta.env.VITE_ROUTE_A_BASE_URL?.trim() || 'http://127.0.0.1:8080'
+export const defaultApiBaseUrl = import.meta.env.VITE_ROUTE_A_BASE_URL?.trim() || 'http://127.0.0.1:8080'
 
 const transportErrorCodes = new Set<RouteATransportErrorCode>([
   'API_UNAVAILABLE',

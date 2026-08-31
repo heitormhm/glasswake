@@ -1,20 +1,23 @@
 import {
+  ArrowClockwise,
   ArrowRight,
   Browser,
-  CaretLeft,
   CaretRight,
   Check,
   Circle,
   CloudSlash,
   Fingerprint,
+  Pause,
+  Play,
   Pulse,
   ShieldChevron,
+  SkipForward,
   WaveSine,
 } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
+import { goldenRunPhaseLabels, type GoldenRunMode, type GoldenRunState } from '../app/demoRun'
 import { demoHref } from '../app/navigation'
 import type { AgentData, HackathonView, MissionStage } from '../app/types'
-import { snapshotKeys } from '../app/types'
 import type { RouteASourcePreference } from '../app/useRouteASequence'
 import { EvidenceDrawer } from './EvidenceDrawer'
 import { ImpactMap } from './ImpactMap'
@@ -123,36 +126,109 @@ function FleetRail({ view }: { view: HackathonView }) {
   )
 }
 
-function DemoFixtureControls({
+function RunIdentity({ mode, run }: { mode: GoldenRunMode; run: GoldenRunState | null }) {
+  if (mode === 'backend' && run) {
+    return (
+      <div className="run-identity run-identity-backend">
+        <span>Route A run</span>
+        <strong>{run.runId}</strong>
+        <small>{`executed ${run.executedAt.slice(11, 19)}Z · ${run.executionMs.toFixed(1)}ms · replaying ${run.events.length}/${run.totalPhases} recorded phases`}</small>
+      </div>
+    )
+  }
+  if (mode === 'local') {
+    return (
+      <div className="run-identity run-identity-local">
+        <span>Local playback</span>
+        <strong>No backend run</strong>
+        <small>Route A did not open a run. The validated sequence is replaying in the browser.</small>
+      </div>
+    )
+  }
+  return (
+    <div className="run-identity run-identity-idle">
+      <span>Golden run</span>
+      <strong>Not started</strong>
+      <small>Run GlassWake to open a Route A run and replay its recorded phases.</small>
+    </div>
+  )
+}
+
+function RunDeck({
   current,
   onSelect,
   transportSource,
+  runMode,
+  run,
+  playing,
+  starting,
+  onStart,
+  onPause,
+  onNext,
+  onReset,
 }: {
   current: number
   onSelect: (index: number) => void
   transportSource: 'api' | 'fixture'
+  runMode: GoldenRunMode
+  run: GoldenRunState | null
+  playing: boolean
+  starting: boolean
+  onStart: () => void
+  onPause: () => void
+  onNext: () => void
+  onReset: () => void
 }) {
+  const started = runMode !== 'idle'
+  const complete = current === goldenRunPhaseLabels.length - 1
+
   return (
-    <footer className="fixture-controls" aria-label="Developer fixture sequencer">
-      <div className="fixture-context"><span>DEMO SEQUENCER</span><strong>{`S${current}`}</strong></div>
-      <button type="button" onClick={() => onSelect(current - 1)} disabled={current === 0}><CaretLeft aria-hidden="true" />Previous</button>
-      <div className="state-track" role="group" aria-label="Golden screen states">
-        {snapshotKeys.map((key, index) => (
-          <button
-            type="button"
-            key={key}
-            className={index === current ? 'active' : index < current ? 'complete' : ''}
-            aria-current={index === current ? 'step' : undefined}
-            aria-label={`Show S${index}: ${key.replaceAll('_', ' ')}`}
-            title={key.replaceAll('_', ' ')}
-            onClick={() => onSelect(index)}
-          >
-            {index < current ? <Check aria-hidden="true" /> : `S${index}`}
+    <footer className="run-deck" aria-label="Golden run controls">
+      <div className="run-deck-primary">
+        {playing ? (
+          <button type="button" className="run-button run-button-pause" onClick={onPause}>
+            <Pause weight="fill" aria-hidden="true" />Pause
           </button>
-        ))}
+        ) : (
+          <button type="button" className="run-button run-button-go" onClick={onStart} disabled={starting}>
+            <Play weight="fill" aria-hidden="true" />
+            {starting ? 'Opening run…' : started ? 'Resume run' : 'Run GlassWake'}
+          </button>
+        )}
+        <button type="button" className="run-button" onClick={onNext} disabled={complete}>
+          <SkipForward weight="bold" aria-hidden="true" />Next
+        </button>
+        <button type="button" className="run-button" onClick={onReset} disabled={!started && current === 0}>
+          <ArrowClockwise weight="bold" aria-hidden="true" />Reset
+        </button>
+        <RunIdentity mode={runMode} run={run} />
       </div>
-      <button type="button" onClick={() => onSelect(current + 1)} disabled={current === 8}>Next<CaretRight aria-hidden="true" /></button>
-      <span className="fixture-note"><CloudSlash aria-hidden="true" />{transportSource === 'api' ? 'API-validated projection' : 'Fixture projection'}</span>
+
+      <ol className="phase-track" aria-label="Golden run phases">
+        {goldenRunPhaseLabels.map((label, index) => {
+          const stamped = run?.events.find((event) => event.seq === index)
+          return (
+            <li key={label} className={index === current ? 'active' : index < current ? 'complete' : ''}>
+              <button
+                type="button"
+                aria-current={index === current ? 'step' : undefined}
+                aria-label={`Phase ${index + 1}: ${label}`}
+                onClick={() => onSelect(index)}
+              >
+                <span className="phase-index">{index < current ? <Check aria-hidden="true" /> : String(index + 1).padStart(2, '0')}</span>
+                <span className="phase-label">{label}</span>
+                <span className="phase-stamp">{stamped ? `${stamped.at.slice(11, 19)}Z` : `S${index}`}</span>
+              </button>
+            </li>
+          )
+        })}
+      </ol>
+
+      <p className="run-deck-note">
+        <CloudSlash aria-hidden="true" />
+        {transportSource === 'api' ? 'API-validated projection' : 'Fixture projection'}
+        <span>S0–S8 remain the internal fixture aliases.</span>
+      </p>
     </footer>
   )
 }
@@ -163,12 +239,28 @@ export function ControlPlane({
   sourcePreference = 'auto',
   transportSource = 'fixture',
   transportStatus,
+  runMode = 'idle',
+  run = null,
+  playing = false,
+  starting = false,
+  onRunStart = () => {},
+  onRunPause = () => {},
+  onRunNext = () => {},
+  onRunReset = () => {},
 }: {
   snapshot: HackathonView
   onSelectSnapshot: (index: number) => void
   sourcePreference?: RouteASourcePreference
   transportSource?: 'api' | 'fixture'
   transportStatus?: ReactNode
+  runMode?: GoldenRunMode
+  run?: GoldenRunState | null
+  playing?: boolean
+  starting?: boolean
+  onRunStart?: () => void
+  onRunPause?: () => void
+  onRunNext?: () => void
+  onRunReset?: () => void
 }) {
   return (
     <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}`}>
@@ -180,7 +272,19 @@ export function ControlPlane({
         <FleetRail view={snapshot} />
       </div>
       <EvidenceDrawer view={snapshot} />
-      <DemoFixtureControls current={snapshot.index} onSelect={onSelectSnapshot} transportSource={transportSource} />
+      <RunDeck
+        current={snapshot.index}
+        onSelect={onSelectSnapshot}
+        transportSource={transportSource}
+        runMode={runMode}
+        run={run}
+        playing={playing}
+        starting={starting}
+        onStart={onRunStart}
+        onPause={onRunPause}
+        onNext={onRunNext}
+        onReset={onRunReset}
+      />
     </main>
   )
 }

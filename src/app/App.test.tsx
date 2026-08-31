@@ -23,6 +23,7 @@ const liveConnection = {
 describe('Route A to Route B application boundary', () => {
   beforeEach(() => {
     loadRouteASequenceMock.mockReset()
+    vi.unstubAllGlobals()
     window.localStorage.clear()
     window.history.replaceState({}, '', '/control-plane?state=8')
   })
@@ -68,5 +69,57 @@ describe('Route A to Route B application boundary', () => {
     expect(screen.getByText('Frozen fixture')).toBeInTheDocument()
     expect(loadRouteASequenceMock).not.toHaveBeenCalled()
     expect(screen.getByRole('link', { name: 'Inspect surface' })).toHaveAttribute('href', '/store?state=5&source=fixture')
+  })
+
+  it('opens a Route A run, rewinds to baseline, and shows the run identity', async () => {
+    loadRouteASequenceMock.mockResolvedValue(liveConnection)
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        run_id: 'gw-run-abc123def456',
+        mode: 'replay_of_recorded_run',
+        cursor: 0,
+        status: 'running',
+        total_phases: 9,
+        executed_at: '2026-08-31T18:00:00.000Z',
+        execution_ms: 4.25,
+        events: [{ seq: 0, phase: 'idle', at: '2026-08-31T18:00:00.000Z' }],
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+
+    expect(screen.getByText('Not started')).toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: /Run GlassWake/ }))
+
+    expect(await screen.findByText('gw-run-abc123def456')).toBeInTheDocument()
+    expect(fetchMock.mock.calls[0][0]).toBe('http://127.0.0.1:8080/v1/demo/runs')
+    // The run starts at the baseline even though the URL asked for S8.
+    expect(screen.getByText('Returns policy · 30 days everywhere')).toBeInTheDocument()
+    expect(screen.queryByTestId('receipt-panel')).not.toBeInTheDocument()
+  })
+
+  it('falls back to honest local playback when Route A will not open a run', async () => {
+    loadRouteASequenceMock.mockResolvedValue(liveConnection)
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /Run GlassWake/ }))
+
+    expect(await screen.findByText('No backend run')).toBeInTheDocument()
+    expect(screen.getByText(/Route A did not open a run/)).toBeInTheDocument()
+  })
+
+  it('resets a started run back to the unstarted baseline', async () => {
+    loadRouteASequenceMock.mockResolvedValue(liveConnection)
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /Run GlassWake/ }))
+    expect(await screen.findByText('No backend run')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Reset/ }))
+    expect(screen.getByText('Not started')).toBeInTheDocument()
+    expect(screen.getByText('Returns policy · 30 days everywhere')).toBeInTheDocument()
   })
 })

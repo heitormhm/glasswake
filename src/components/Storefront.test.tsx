@@ -58,4 +58,18 @@ describe('Northstar storefront fixture', () => {
       '/store/product/NST-BAG-001?state=8&source=api',
     )
   })
+
+  it('makes the authoritative-versus-storefront divergence readable on the product surface', () => {
+    render(<NorthstarStore path="/store/product/NST-BAG-001" snapshot={getSnapshot(5)} />)
+    const divergence = screen.getByText('STALE').closest('.policy-divergence')!
+    expect(divergence.getAttribute('data-diverged')).toBe('true')
+    expect(divergence).toHaveTextContent('Authoritative policy14 days')
+    expect(divergence).toHaveTextContent('This surface30 days')
+  })
+
+  it('reports the surface as matching once the authorized repair has landed', () => {
+    render(<NorthstarStore path="/store/product/NST-BAG-001" snapshot={getSnapshot(6)} />)
+    expect(screen.queryByText('STALE')).not.toBeInTheDocument()
+    expect(screen.getByText('Matches · 14 days')).toBeInTheDocument()
+  })
 })

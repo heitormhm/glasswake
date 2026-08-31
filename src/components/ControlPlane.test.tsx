@@ -24,4 +24,22 @@ describe('ControlPlane critical projections', () => {
     expect(screen.getByText('5 of 5 postconditions passed')).toBeInTheDocument()
     expect(screen.getByTestId('receipt-panel')).toBeInTheDocument()
   })
+
+  it('keeps the run history readable in the final frame instead of going uniformly green', () => {
+    const { container } = render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} />)
+    expect(container.querySelectorAll('[data-node-outcome="repaired"]')).toHaveLength(3)
+    expect(container.querySelectorAll('[data-node-outcome="verified"]')).toHaveLength(3)
+    expect(container.querySelectorAll('[data-node-outcome="skipped"]')).toHaveLength(6)
+  })
+
+  it('carries no outcome history before a repair has actually been applied', () => {
+    const { container } = render(<ControlPlane snapshot={getSnapshot(5)} onSelectSnapshot={vi.fn()} />)
+    expect(container.querySelectorAll('[data-node-outcome]')).toHaveLength(0)
+  })
+
+  it('names the run phases semantically rather than as S-numbers', () => {
+    render(<ControlPlane snapshot={getSnapshot(3)} onSelectSnapshot={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'Phase 4: Fleet dispatched' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Phase 9: Receipt sealed' })).toBeInTheDocument()
+  })
 })

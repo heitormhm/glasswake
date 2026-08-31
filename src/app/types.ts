@@ -38,11 +38,18 @@ export interface MissionStage {
   status: MissionStatus
 }
 
+/**
+ * What the run did to this node, kept after the run closes so the final frame
+ * still tells the story instead of turning uniformly green.
+ */
+export type NodeOutcome = 'repaired' | 'verified' | 'skipped'
+
 export interface ImpactNodeData {
   id: string
   label: string
   kind: 'policy' | 'database' | 'catalog' | 'surface' | 'system' | 'proof'
   state: NodeState
+  outcome: NodeOutcome | null
   x: number
   y: number
 }

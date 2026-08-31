@@ -122,3 +122,36 @@ def test_cloud_api_local_mock_replay():
     view = replay.json()
     assert view["receipt"]["status"] == "VERIFIED"
     assert view["cloud_proof"] == {"cloud_run": False, "firestore": False, "evidence_refs": []}
+
+
+def test_golden_run_advances_and_never_seals_a_receipt_before_fresh_verification():
+    client = TestClient(app)
+    created = client.post("/v1/demo/runs")
+    assert created.status_code == 200
+    run = created.json()
+    run_id = run["run_id"]
+
+    assert run["mode"] == "replay_of_recorded_run"
+    assert run["cursor"] == 0
+    assert run["phase"] == "idle"
+    assert run["status"] == "running"
+    assert run["view"]["receipt"] is None
+
+    seen_verification = False
+    for expected_cursor in range(1, run["total_phases"]):
+        step = client.post(f"/v1/demo/runs/{run_id}/advance").json()
+        assert step["cursor"] == expected_cursor
+        if step["view"]["receipt"] is not None:
+            assert seen_verification, "receipt appeared before fresh verification"
+        if step["phase"] == "fresh_verification":
+            seen_verification = True
+
+    assert step["phase"] == "receipt_complete"
+    assert step["status"] == "complete"
+    assert step["view"]["receipt"]["status"] == "VERIFIED"
+    assert [event["seq"] for event in step["events"]] == list(range(9))
+
+    # Advancing past the end is a no-op, not an error or a wrap-around.
+    assert client.post(f"/v1/demo/runs/{run_id}/advance").json()["cursor"] == 8
+    assert client.get(f"/v1/demo/runs/{run_id}").json()["phase"] == "receipt_complete"
+    assert client.get("/v1/demo/runs/gw-run-missing").status_code == 404

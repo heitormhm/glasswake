@@ -63,11 +63,31 @@ function ProductVisual({ tone, icon: Icon, large = false }: { tone: string; icon
   )
 }
 
-function PolicyCallout({ days, surfaceId }: { days: number; surfaceId: string }) {
+function PolicyCallout({
+  days,
+  authoritativeDays,
+  surfaceId,
+}: {
+  days: number
+  authoritativeDays: number
+  surfaceId: string
+}) {
+  const diverged = days !== authoritativeDays
   return (
-    <aside className={`store-policy${days === 14 ? ' policy-current' : ' policy-stale-fixture'}`} aria-label="Returns policy">
+    <aside className={`store-policy${diverged ? ' policy-stale-fixture' : ' policy-current'}`} aria-label="Returns policy">
       <div className="policy-icon"><ShieldCheck weight="duotone" aria-hidden="true" /></div>
       <div><span>Returns policy</span><strong>Returns accepted within {days} days</strong><p>Unused items in original condition. A prepaid return label is included.</p></div>
+      <div className="policy-divergence" data-diverged={diverged}>
+        {diverged ? (
+          <>
+            <div><small>Authoritative policy</small><strong>{authoritativeDays} days</strong></div>
+            <div className="divergence-stale"><small>This surface</small><strong>{days} days</strong></div>
+            <span className="divergence-tag">STALE</span>
+          </>
+        ) : (
+          <div><small>Authoritative policy</small><strong>Matches · {authoritativeDays} days</strong></div>
+        )}
+      </div>
       <div className="surface-identity"><Fingerprint aria-hidden="true" /><span><small>Inspectable surface</small><code>{surfaceId}</code></span></div>
     </aside>
   )
@@ -124,7 +144,7 @@ function ProductDetail({ view, sourcePreference }: { view: HackathonView; source
           <p className="fixture-disclosure"><Info aria-hidden="true" />Fixture storefront · no payment or order is created.</p>
         </div>
       </section>
-      <PolicyCallout days={view.policy.storefrontDays} surfaceId="surface://store/product/NST-BAG-001" />
+      <PolicyCallout days={view.policy.storefrontDays} authoritativeDays={view.policy.authoritativeDays} surfaceId="surface://store/product/NST-BAG-001" />
       <section className="product-story"><span>18 L</span><div><p className="store-kicker">One volume, carefully divided</p><h2>Room for the day.<br />Nothing to hunt for.</h2><p>The structured base keeps the bag upright while two internal slip pockets separate cables and smaller essentials.</p></div></section>
     </main>
   )
@@ -141,7 +161,7 @@ function CheckoutHelp({ view, sourcePreference }: { view: HackathonView; sourceP
           <article><span>03</span><div><h2>Returns</h2><p>The policy at right is the copy monitored by GlassWake.</p></div></article>
         </section>
         <div>
-          <PolicyCallout days={view.policy.storefrontDays} surfaceId="surface://store/checkout-help" />
+          <PolicyCallout days={view.policy.storefrontDays} authoritativeDays={view.policy.authoritativeDays} surfaceId="surface://store/checkout-help" />
           <a className="back-to-product" href={demoHref('/store/product/NST-BAG-001', view.index, sourcePreference)}>View Navy Commuter Bag <ArrowRight aria-hidden="true" /></a>
         </div>
       </div>
@@ -165,7 +185,16 @@ export function NorthstarStore({
   return (
     <div className="northstar-store">
       <StoreHeader state={snapshot.index} sourcePreference={sourcePreference} />
-      {transportStatus}
+      {transportStatus && (
+        <details className="store-demo-details">
+          <summary>
+            <span className={`store-demo-dot source-${transportSource}`} aria-hidden="true" />
+            GlassWake monitored · {transportSource === 'api' ? 'Live API' : 'Fixture'}
+            <em>Demo details</em>
+          </summary>
+          {transportStatus}
+        </details>
+      )}
       {path === '/store/product/NST-BAG-001'
         ? <ProductDetail view={snapshot} sourcePreference={sourcePreference} />
         : path === '/store/checkout-help'

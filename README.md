@@ -36,6 +36,9 @@ Important endpoints:
 - `GET /v1/demo/snapshots`
 - `GET /v1/demo/snapshots/{state}`
 - `POST /v1/demo/replay`
+- `POST /v1/demo/runs` — executes the golden path once and opens a run
+- `GET /v1/demo/runs/{run_id}`
+- `POST /v1/demo/runs/{run_id}/advance`
 - `POST /v1/gemini/review` — live and credential-dependent; not used by deterministic tests
 
 The exact deployed revision and its immutable proof are documented in `docs/CLOUD_PROOF.md`. Public access, a successor deployment, publication, push and submission still require separate owner authority.
@@ -52,7 +55,17 @@ npm run build
 npm run capture
 ```
 
-Open `/control-plane` for the S0–S8 sequencer. The connected consumer views are available at `/store`, `/store/product/NST-BAG-001`, and `/store/checkout-help`. All cross-route links preserve the selected data-source mode.
+Open `/control-plane` and press **Run GlassWake**. That opens a Route A run
+(`POST /v1/demo/runs`), which executes `GoldenPathRunner` once and records its
+nine canonical phases; the control plane then replays those recorded phases and
+stamps each transition from the backend event log. The run identity strip states
+plainly that this is replay of a recorded run, not nine live computations. If
+the run endpoint is unreachable the deck falls back to browser-local playback
+and says so — it never shows a run id it does not have.
+
+The nine-step phase track is labelled semantically (Baseline → Receipt sealed);
+`S0`–`S8` survive only as the internal fixture aliases. Any phase can still be
+clicked directly, which pauses the run and hands control to the operator. The connected consumer views are available at `/store`, `/store/product/NST-BAG-001`, and `/store/checkout-help`. All cross-route links preserve the selected data-source mode.
 
 The default `source=auto` mode renders the frozen fixtures as an immediate preview while it validates the local API. It switches to `Local API validated` only after all nine canonical snapshots pass the frozen JSON Schema and sequence invariants. Network, timeout, HTTP, JSON, schema, or sequence failures produce a visible `Fixture fallback` rail with a retry action; the adapter is never called with an untrusted payload. Use `source=api` to request the local connection explicitly or `source=fixture` for deterministic offline capture. Override the local origin with `VITE_ROUTE_A_BASE_URL` when needed.
 
