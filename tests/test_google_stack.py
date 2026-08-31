@@ -155,3 +155,37 @@ def test_golden_run_advances_and_never_seals_a_receipt_before_fresh_verification
     assert client.post(f"/v1/demo/runs/{run_id}/advance").json()["cursor"] == 8
     assert client.get(f"/v1/demo/runs/{run_id}").json()["phase"] == "receipt_complete"
     assert client.get("/v1/demo/runs/gw-run-missing").status_code == 404
+
+
+def test_run_carries_cloud_evidence_on_every_phase_when_cloud_run_injects_it(monkeypatch):
+    monkeypatch.setenv("K_SERVICE", "glasswake-kanon-pulse")
+    monkeypatch.setenv("K_REVISION", "glasswake-kanon-pulse-00002-q6v")
+    monkeypatch.setenv("GLASSWAKE_STORE", "memory")
+    client = TestClient(app)
+
+    run = client.post("/v1/demo/runs").json()
+    expected = "cloud-run://glasswake-kanon-pulse/revisions/glasswake-kanon-pulse-00002-q6v"
+
+    assert run["view"]["cloud_proof"]["cloud_run"] is True
+    assert expected in run["view"]["cloud_proof"]["evidence_refs"]
+
+    # The control plane reads proof off whichever phase is on screen, so the
+    # evidence must survive every advance, not just the opening frame.
+    for _ in range(8):
+        step = client.post(f"/v1/demo/runs/{run['run_id']}/advance").json()
+        assert step["view"]["cloud_proof"]["cloud_run"] is True
+        assert expected in step["view"]["cloud_proof"]["evidence_refs"]
+
+
+def test_run_claims_no_cloud_evidence_when_running_locally(monkeypatch):
+    monkeypatch.delenv("K_SERVICE", raising=False)
+    monkeypatch.delenv("K_REVISION", raising=False)
+    monkeypatch.setenv("GLASSWAKE_STORE", "memory")
+
+    run = TestClient(app).post("/v1/demo/runs").json()
+    assert run["view"]["cloud_proof"] == {
+        "cloud_run": False,
+        "firestore": False,
+        "evidence_refs": [],
+    }
+

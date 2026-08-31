@@ -65,6 +65,19 @@ def get_snapshot(state: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Unknown golden snapshot state.") from exc
 
 
+def _cloud_run_ref() -> str | None:
+    """The Cloud Run revision serving this process, or None when running locally.
+
+    K_SERVICE and K_REVISION are injected by Cloud Run itself, so their presence
+    is the runtime's own evidence rather than a claim the application makes.
+    """
+    service_name = os.getenv("K_SERVICE")
+    revision = os.getenv("K_REVISION")
+    if service_name and revision:
+        return f"cloud-run://{service_name}/revisions/{revision}"
+    return None
+
+
 @app.post("/v1/demo/replay")
 def replay() -> dict[str, Any]:
     view = copy.deepcopy(_snapshots()["receipt_complete"])
@@ -81,13 +94,10 @@ def replay() -> dict[str, Any]:
     else:
         raise HTTPException(status_code=500, detail="Unsupported GLASSWAKE_STORE mode.")
 
-    service_name = os.getenv("K_SERVICE")
-    revision = os.getenv("K_REVISION")
-    if service_name and revision:
+    cloud_ref = _cloud_run_ref()
+    if cloud_ref:
         view["cloud_proof"]["cloud_run"] = True
-        view["cloud_proof"]["evidence_refs"].append(
-            f"cloud-run://{service_name}/revisions/{revision}"
-        )
+        view["cloud_proof"]["evidence_refs"].append(cloud_ref)
     return view
 
 
@@ -158,12 +168,43 @@ def _projection(run: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _attach_cloud_proof(views: dict[str, dict[str, Any]]) -> None:
+    """Carry the run's Google Cloud evidence onto every phase of that run.
+
+    The control plane reads cloud_proof off whichever phase is on screen, so the
+    evidence has to travel with all nine of them, not just the receipt. Firestore
+    persistence is best-effort: a write failure costs the run its persistence
+    evidence, never the run itself.
+    """
+    cloud_ref = _cloud_run_ref()
+
+    firestore_refs: list[str] = []
+    if os.getenv("GLASSWAKE_STORE") == "firestore":
+        try:
+            firestore_refs = FirestoreRunStore.from_default_client().persist_view(
+                copy.deepcopy(views["receipt_complete"])
+            )
+        except Exception:
+            firestore_refs = []
+
+    for view in views.values():
+        proof = view["cloud_proof"]
+        if cloud_ref:
+            proof["cloud_run"] = True
+            proof["evidence_refs"].append(cloud_ref)
+        if firestore_refs:
+            proof["firestore"] = True
+            proof["evidence_refs"].extend(firestore_refs)
+
+
 @app.post("/v1/demo/runs")
 def create_run() -> dict[str, Any]:
     executed_at = _now()
     started = time.perf_counter()
     views = _snapshots()
     execution_ms = round((time.perf_counter() - started) * 1000, 3)
+
+    _attach_cloud_proof(views)
 
     run_id = f"gw-run-{uuid4().hex[:12]}"
     _runs[run_id] = {
