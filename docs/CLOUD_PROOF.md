@@ -10,7 +10,7 @@ Evidence captured on `2026-08-31` from a deployment built only from Git commit `
 
 - Project: `kanonize-continuity-20844` (`KANONIZE Continuity`, project number `701830159437`).
 - Region: `us-central1`, matching the existing Cloud Run and Firestore regional boundary.
-- Billing: enabled on `billingAccounts/01BCAB-8AD3F7-91C15B`.
+- Billing: enabled (account id withheld; it is not evidence of anything a judge needs).
 - Firestore: `(default)`, `FIRESTORE_NATIVE`, location `us-central1`.
 - Runtime service account: `glasswake-kanon-pulse@kanonize-continuity-20844.iam.gserviceaccount.com`.
 - Runtime roles: `roles/aiplatform.user`, `roles/datastore.user`, and `roles/serviceusage.serviceUsageConsumer`.
