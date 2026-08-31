@@ -38,7 +38,20 @@ It does **not** choose affected nodes, invent findings, grant authority, determi
 5. The affected compliance mission is visualized separately from the three stale surfaces, while aggregate counts remain exactly those supplied by `watchzone_summary`.
 6. `cloud_run: false` and `firestore: false` produce no deployment or persistence claim.
 
-## Regeneration and replacement seam
+## Live transport and fixture fallback
+
+`src/app/routeAClient.ts` is the trust boundary in front of the adapter. It checks local API health, requires the exact canonical S0–S8 catalogue, validates every raw snapshot against `contracts/hackathon_view.schema.json`, and enforces the cross-state invariants above. Only then does it call the existing `adaptRouteAView` function. The adapter's semantic responsibilities do not change.
+
+`src/app/useRouteASequence.ts` owns the transport lifecycle. Its user-visible states are:
+
+- `loading`: frozen fixtures remain available as an immediate preview while the local sequence is checked;
+- `live`: all nine API snapshots passed schema and sequence validation;
+- `fallback`: the local API failed or returned untrusted data, so frozen fixtures remain active with the exact failure category and a retry action;
+- `fixture`: explicit deterministic fixture mode; no network request is made.
+
+The URL preference is preserved across Control Plane, Storefront, product and checkout-help routes. `source=auto` is the default, `source=api` explicitly requests the local bridge, and `source=fixture` pins deterministic offline data. The default API origin is `http://127.0.0.1:8080`; `VITE_ROUTE_A_BASE_URL` may override it.
+
+## Regeneration seam
 
 Regenerate frozen views with:
 
@@ -46,4 +59,4 @@ Regenerate frozen views with:
 PYTHONPATH=src python3 -m hackathon.cli --write
 ```
 
-The frontend imports those validated JSON files in `src/app/fixtures.ts`. A future live Route A provider should supply the same frozen schema to `adaptRouteAView`; no presentation component needs semantic changes.
+The frontend imports those validated JSON files in `src/app/fixtures.ts`. They are the deterministic fallback and golden-capture source. A replacement provider must satisfy the same frozen schema and sequence validation before reaching `adaptRouteAView`; presentation components require no semantic change.

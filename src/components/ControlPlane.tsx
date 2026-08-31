@@ -11,21 +11,32 @@ import {
   ShieldChevron,
   WaveSine,
 } from '@phosphor-icons/react'
+import type { ReactNode } from 'react'
+import { demoHref } from '../app/navigation'
 import type { AgentData, HackathonView, MissionStage } from '../app/types'
 import { snapshotKeys } from '../app/types'
+import type { RouteASourcePreference } from '../app/useRouteASequence'
 import { EvidenceDrawer } from './EvidenceDrawer'
 import { ImpactMap } from './ImpactMap'
 import { SectionLabel, StatusPill } from './Primitives'
 
-function TopBar({ view }: { view: HackathonView }) {
+function TopBar({
+  view,
+  sourcePreference,
+  transportSource,
+}: {
+  view: HackathonView
+  sourcePreference: RouteASourcePreference
+  transportSource: 'api' | 'fixture'
+}) {
   return (
     <header className="topbar">
       <div className="wordmark"><span className="brand-mark"><WaveSine weight="bold" aria-hidden="true" /></span><strong>GlassWake</strong></div>
       <span className="fixture-badge">SYNTHETIC ENTERPRISE FIXTURE</span>
       <div className="run-summary"><span>Golden Run</span><strong>{view.summary}</strong></div>
       <div className="topbar-actions">
-        {!view.cloudProof.cloudRun && !view.cloudProof.firestore && <span className="local-proof" title="No cloud execution data supplied"><CloudSlash aria-hidden="true" />Local fixture</span>}
-        <a href={`/store?state=${view.index}`} className="surface-link"><Browser aria-hidden="true" />Inspect surface</a>
+        {!view.cloudProof.cloudRun && !view.cloudProof.firestore && <span className="local-proof" title="No cloud execution data supplied"><CloudSlash aria-hidden="true" />{transportSource === 'api' ? 'Local API' : 'Local fixture'}</span>}
+        <a href={demoHref('/store', view.index, sourcePreference)} className="surface-link"><Browser aria-hidden="true" />Inspect surface</a>
         <span className={`run-status run-status-${view.index}`}><Pulse aria-hidden="true" />{view.runStatus}</span>
       </div>
     </header>
@@ -112,7 +123,15 @@ function FleetRail({ view }: { view: HackathonView }) {
   )
 }
 
-function DemoFixtureControls({ current, onSelect }: { current: number; onSelect: (index: number) => void }) {
+function DemoFixtureControls({
+  current,
+  onSelect,
+  transportSource,
+}: {
+  current: number
+  onSelect: (index: number) => void
+  transportSource: 'api' | 'fixture'
+}) {
   return (
     <footer className="fixture-controls" aria-label="Developer fixture sequencer">
       <div className="fixture-context"><span>DEMO SEQUENCER</span><strong>{`S${current}`}</strong></div>
@@ -133,22 +152,35 @@ function DemoFixtureControls({ current, onSelect }: { current: number; onSelect:
         ))}
       </div>
       <button type="button" onClick={() => onSelect(current + 1)} disabled={current === 8}>Next<CaretRight aria-hidden="true" /></button>
-      <span className="fixture-note"><CloudSlash aria-hidden="true" />Fixture-only projection</span>
+      <span className="fixture-note"><CloudSlash aria-hidden="true" />{transportSource === 'api' ? 'API-validated projection' : 'Fixture projection'}</span>
     </footer>
   )
 }
 
-export function ControlPlane({ snapshot, onSelectSnapshot }: { snapshot: HackathonView; onSelectSnapshot: (index: number) => void }) {
+export function ControlPlane({
+  snapshot,
+  onSelectSnapshot,
+  sourcePreference = 'auto',
+  transportSource = 'fixture',
+  transportStatus,
+}: {
+  snapshot: HackathonView
+  onSelectSnapshot: (index: number) => void
+  sourcePreference?: RouteASourcePreference
+  transportSource?: 'api' | 'fixture'
+  transportStatus?: ReactNode
+}) {
   return (
-    <main className={`control-plane snapshot-${snapshot.snapshot}`}>
-      <TopBar view={snapshot} />
+    <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}`}>
+      <TopBar view={snapshot} sourcePreference={sourcePreference} transportSource={transportSource} />
+      {transportStatus}
       <div className="control-grid">
         <ChangeMissionRail view={snapshot} />
         <ImpactMap view={snapshot} />
         <FleetRail view={snapshot} />
       </div>
       <EvidenceDrawer view={snapshot} />
-      <DemoFixtureControls current={snapshot.index} onSelect={onSelectSnapshot} />
+      <DemoFixtureControls current={snapshot.index} onSelect={onSelectSnapshot} transportSource={transportSource} />
     </main>
   )
 }

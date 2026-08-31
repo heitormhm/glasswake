@@ -11,7 +11,10 @@ import {
   ShieldCheck,
   ShoppingBagOpen,
 } from '@phosphor-icons/react'
+import type { ReactNode } from 'react'
+import { demoHref } from '../app/navigation'
 import type { HackathonView } from '../app/types'
+import type { RouteASourcePreference } from '../app/useRouteASequence'
 
 const products = [
   {
@@ -40,12 +43,12 @@ const products = [
   },
 ] as const
 
-function StoreHeader({ state }: { state: number }) {
+function StoreHeader({ state, sourcePreference }: { state: number; sourcePreference: RouteASourcePreference }) {
   return (
     <header className="store-header">
-      <a className="store-wordmark" href={`/store?state=${state}`}><span>N</span><strong>Northstar Supply</strong></a>
-      <nav aria-label="Store navigation"><a href={`/store?state=${state}`}>Field goods</a><a href={`/store/checkout-help?state=${state}`}>Help</a></nav>
-      <a className="control-plane-link" href={`/control-plane?state=${state}`}><ArrowLeft aria-hidden="true" />GlassWake control plane</a>
+      <a className="store-wordmark" href={demoHref('/store', state, sourcePreference)}><span>N</span><strong>Northstar Supply</strong></a>
+      <nav aria-label="Store navigation"><a href={demoHref('/store', state, sourcePreference)}>Field goods</a><a href={demoHref('/store/checkout-help', state, sourcePreference)}>Help</a></nav>
+      <a className="control-plane-link" href={demoHref('/control-plane', state, sourcePreference)}><ArrowLeft aria-hidden="true" />GlassWake control plane</a>
     </header>
   )
 }
@@ -70,7 +73,7 @@ function PolicyCallout({ days, surfaceId }: { days: number; surfaceId: string })
   )
 }
 
-function ProductGrid({ view }: { view: HackathonView }) {
+function ProductGrid({ view, sourcePreference }: { view: HackathonView; sourcePreference: RouteASourcePreference }) {
   return (
     <main className="store-main">
       <section className="store-intro">
@@ -83,7 +86,7 @@ function ProductGrid({ view }: { view: HackathonView }) {
           const Icon = product.icon
           return (
             <article className={`product-card product-card-${index + 1}`} key={product.id}>
-              <a href={product.id === 'NST-BAG-001' ? `/store/product/${product.id}?state=${view.index}` : '#'} aria-label={`View ${product.name}`}>
+              <a href={product.id === 'NST-BAG-001' ? demoHref(`/store/product/${product.id}`, view.index, sourcePreference) : '#'} aria-label={`View ${product.name}`}>
                 <ProductVisual tone={product.tone} icon={Icon} />
                 <div className="product-copy"><div><span>{product.note}</span><h2>{product.name}</h2></div><strong>{product.price}</strong></div>
                 <p className="product-link">View field notes <ArrowRight aria-hidden="true" /></p>
@@ -101,10 +104,10 @@ function ProductGrid({ view }: { view: HackathonView }) {
   )
 }
 
-function ProductDetail({ view }: { view: HackathonView }) {
+function ProductDetail({ view, sourcePreference }: { view: HackathonView; sourcePreference: RouteASourcePreference }) {
   return (
     <main className="product-detail-page">
-      <div className="store-breadcrumbs"><a href={`/store?state=${view.index}`}>Field goods</a><CaretRight aria-hidden="true" /><span>Navy Commuter Bag</span></div>
+      <div className="store-breadcrumbs"><a href={demoHref('/store', view.index, sourcePreference)}>Field goods</a><CaretRight aria-hidden="true" /><span>Navy Commuter Bag</span></div>
       <section className="product-detail-grid">
         <ProductVisual tone="navy" icon={Bag} large />
         <div className="product-detail-copy">
@@ -127,7 +130,7 @@ function ProductDetail({ view }: { view: HackathonView }) {
   )
 }
 
-function CheckoutHelp({ view }: { view: HackathonView }) {
+function CheckoutHelp({ view, sourcePreference }: { view: HackathonView; sourcePreference: RouteASourcePreference }) {
   return (
     <main className="checkout-help-page">
       <div className="help-heading"><p className="store-kicker">Checkout help</p><h1>Before you place an order</h1><p>Clear answers to the questions that matter at checkout.</p></div>
@@ -139,19 +142,36 @@ function CheckoutHelp({ view }: { view: HackathonView }) {
         </section>
         <div>
           <PolicyCallout days={view.policy.storefrontDays} surfaceId="surface://store/checkout-help" />
-          <a className="back-to-product" href={`/store/product/NST-BAG-001?state=${view.index}`}>View Navy Commuter Bag <ArrowRight aria-hidden="true" /></a>
+          <a className="back-to-product" href={demoHref('/store/product/NST-BAG-001', view.index, sourcePreference)}>View Navy Commuter Bag <ArrowRight aria-hidden="true" /></a>
         </div>
       </div>
     </main>
   )
 }
 
-export function NorthstarStore({ path, snapshot }: { path: string; snapshot: HackathonView }) {
+export function NorthstarStore({
+  path,
+  snapshot,
+  sourcePreference = 'auto',
+  transportSource = 'fixture',
+  transportStatus,
+}: {
+  path: string
+  snapshot: HackathonView
+  sourcePreference?: RouteASourcePreference
+  transportSource?: 'api' | 'fixture'
+  transportStatus?: ReactNode
+}) {
   return (
     <div className="northstar-store">
-      <StoreHeader state={snapshot.index} />
-      {path === '/store/product/NST-BAG-001' ? <ProductDetail view={snapshot} /> : path === '/store/checkout-help' ? <CheckoutHelp view={snapshot} /> : <ProductGrid view={snapshot} />}
-      <footer className="store-footer"><div className="store-wordmark"><span>N</span><strong>Northstar Supply</strong></div><p>Fixture commerce surface for GlassWake Route B.</p><Bag aria-hidden="true" /></footer>
+      <StoreHeader state={snapshot.index} sourcePreference={sourcePreference} />
+      {transportStatus}
+      {path === '/store/product/NST-BAG-001'
+        ? <ProductDetail view={snapshot} sourcePreference={sourcePreference} />
+        : path === '/store/checkout-help'
+          ? <CheckoutHelp view={snapshot} sourcePreference={sourcePreference} />
+          : <ProductGrid view={snapshot} sourcePreference={sourcePreference} />}
+      <footer className="store-footer"><div className="store-wordmark"><span>N</span><strong>Northstar Supply</strong></div><p>{transportSource === 'api' ? 'Route A API-validated commerce projection.' : 'Fixture commerce surface for GlassWake Route B.'}</p><Bag aria-hidden="true" /></footer>
     </div>
   )
 }

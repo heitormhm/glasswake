@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react'
 import { ControlPlane } from '../components/ControlPlane'
+import { DataSourceStatus } from '../components/DataSourceStatus'
 import { NorthstarStore } from '../components/Storefront'
 import { getSnapshot } from './fixtures'
+import {
+  parseRouteASourcePreference,
+  useRouteASequence,
+  type RouteASourcePreference,
+} from './useRouteASequence'
 
 const fixtureStorageKey = 'glasswake.fixture.state'
 
@@ -15,7 +21,11 @@ function parseFixtureIndex(): number {
 
 export function App() {
   const [snapshotIndex, setSnapshotIndex] = useState(parseFixtureIndex)
-  const snapshot = useMemo(() => getSnapshot(snapshotIndex), [snapshotIndex])
+  const [sourcePreference, setSourcePreference] = useState<RouteASourcePreference>(() => (
+    parseRouteASourcePreference(window.location.search)
+  ))
+  const { snapshots, dataSource, retry } = useRouteASequence({ preference: sourcePreference })
+  const snapshot = useMemo(() => snapshots[snapshotIndex] ?? getSnapshot(snapshotIndex), [snapshotIndex, snapshots])
   const path = window.location.pathname
 
   const selectSnapshot = (nextIndex: number) => {
@@ -27,9 +37,34 @@ export function App() {
     window.history.replaceState({}, '', nextUrl)
   }
 
-  if (path === '/store' || path.startsWith('/store/')) {
-    return <NorthstarStore path={path} snapshot={snapshot} />
+  const useApi = () => {
+    setSourcePreference('api')
+    const nextUrl = new URL(window.location.href)
+    nextUrl.searchParams.set('source', 'api')
+    window.history.replaceState({}, '', nextUrl)
   }
 
-  return <ControlPlane snapshot={snapshot} onSelectSnapshot={selectSnapshot} />
+  const transportStatus = <DataSourceStatus state={dataSource} onRetry={retry} onUseApi={useApi} />
+
+  if (path === '/store' || path.startsWith('/store/')) {
+    return (
+      <NorthstarStore
+        path={path}
+        snapshot={snapshot}
+        sourcePreference={sourcePreference}
+        transportSource={dataSource.source}
+        transportStatus={transportStatus}
+      />
+    )
+  }
+
+  return (
+    <ControlPlane
+      snapshot={snapshot}
+      onSelectSnapshot={selectSnapshot}
+      sourcePreference={sourcePreference}
+      transportSource={dataSource.source}
+      transportStatus={transportStatus}
+    />
+  )
 }

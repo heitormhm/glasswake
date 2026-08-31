@@ -9,7 +9,7 @@ import freshVerification from '../../fixtures/hackathon_view/07_fresh_verificati
 import receiptComplete from '../../fixtures/hackathon_view/08_receipt_complete.json'
 import { adaptRouteAView, type RawHackathonView } from './routeAAdapter'
 
-const rawSnapshots = [
+export const rawSnapshots = [
   idle,
   changeDetected,
   impactScoped,

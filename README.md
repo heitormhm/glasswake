@@ -12,7 +12,7 @@ The proof chain is:
 - `HackathonView`: frozen JSON Schema plus ten fixture snapshots.
 - Google ADK and Gemini: a structured Vertex AI review passed on revision `glasswake-kanon-pulse-f777655`.
 - Cloud Run and Firestore: private deployment and persisted replay are `CLOUD_VERIFIED`; see `docs/CLOUD_PROOF.md`.
-- Route B: the Vite/React control plane is preserved and now consumes the canonical snapshots through an explicit `HackathonView` adapter.
+- Route B: the Vite/React control plane now connects to the local Route A API, validates the complete canonical sequence, and then passes each snapshot through the unchanged `HackathonView` adapter. Frozen fixtures remain an explicit, visible fallback.
 
 ## Local verification
 
@@ -42,7 +42,7 @@ The exact deployed revision and its immutable proof are documented in `docs/CLOU
 
 ## Route B frontend
 
-The Vite/React control plane now consumes the frozen Route A snapshots through `src/app/routeAAdapter.ts`; the provisional presentation fixture is no longer treated as the backend source of truth.
+Keep the local API running on `127.0.0.1:8080`, then start the Vite application in a second terminal:
 
 ```text
 npm install
@@ -52,4 +52,8 @@ npm run build
 npm run capture
 ```
 
-Open `/control-plane` for the S0–S8 sequencer. The consumer fixture is available at `/store`, `/store/product/NST-BAG-001`, and `/store/checkout-help`. Frontend binding and design contracts are documented in `docs/HACKATHON_VIEW_BINDING.md`, `docs/UI_INFORMATION_ARCHITECTURE.md`, `docs/DESIGN_TOKENS.md`, and `docs/DEMO_SCREEN_STATES.md`.
+Open `/control-plane` for the S0–S8 sequencer. The connected consumer views are available at `/store`, `/store/product/NST-BAG-001`, and `/store/checkout-help`. All cross-route links preserve the selected data-source mode.
+
+The default `source=auto` mode renders the frozen fixtures as an immediate preview while it validates the local API. It switches to `Local API validated` only after all nine canonical snapshots pass the frozen JSON Schema and sequence invariants. Network, timeout, HTTP, JSON, schema, or sequence failures produce a visible `Fixture fallback` rail with a retry action; the adapter is never called with an untrusted payload. Use `source=api` to request the local connection explicitly or `source=fixture` for deterministic offline capture. Override the local origin with `VITE_ROUTE_A_BASE_URL` when needed.
+
+Frontend binding and design contracts are documented in `docs/HACKATHON_VIEW_BINDING.md`, `docs/UI_INFORMATION_ARCHITECTURE.md`, `docs/DESIGN_TOKENS.md`, and `docs/DEMO_SCREEN_STATES.md`.

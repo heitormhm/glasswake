@@ -50,7 +50,7 @@ try {
   })
 
   for (let index = 0; index < stateNames.length; index += 1) {
-    await page.goto(`${baseUrl}/control-plane?state=${index}`, { waitUntil: 'networkidle' })
+    await page.goto(`${baseUrl}/control-plane?state=${index}&source=fixture`, { waitUntil: 'networkidle' })
     await page.evaluate(() => document.fonts.ready)
     await page.screenshot({
       path: fileURLToPath(new URL(`S${index}-${stateNames[index]}.png`, output)),
