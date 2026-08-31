@@ -2,6 +2,8 @@
 
 Current status: `CLOUD_VERIFIED / PRIVATE_SERVICE / NOT_PUBLISHED / NOT_SUBMITTED`
 
+Serving revision: `glasswake-kanon-pulse-00003-gsn`.
+
 Evidence captured on `2026-08-31` from a deployment built only from Git commit `f7776551726083f4c4ce2d56bce81df0ed102690`.
 
 ## Authorized target and billing boundary
@@ -114,6 +116,51 @@ Returned evidence references:
 - `firestore://receipts/receipt_returns_001`
 - `firestore://run_views/run_demo_001`
 - `cloud-run://glasswake-kanon-pulse/revisions/glasswake-kanon-pulse-f777655`
+
+## Successor deployment — golden run lifecycle
+
+Revision `glasswake-kanon-pulse-00003-gsn` was deployed on `2026-08-31` from the
+working tree at commit `4a67d5c`, replacing `glasswake-kanon-pulse-f777655` and
+taking `100%` of traffic. The evidence above was captured from the earlier
+revision and remains valid for the Gemini and replay paths, which are unchanged.
+
+Deployment identity:
+
+- Service: `glasswake-kanon-pulse`.
+- Revision: `glasswake-kanon-pulse-00003-gsn`.
+- Runtime service account, all five environment variables, `maxScale=1`, and the
+  private IAM posture were each re-verified after deployment. Neither `allUsers`
+  nor `allAuthenticatedUsers` is present.
+
+Golden run lifecycle, exercised against the deployed revision with an identity
+token:
+
+- `POST /v1/demo/runs` opened run `gw-run-acecec846969`.
+- Advancing the cursor through all nine phases produced nine distinct
+  server-side event timestamps.
+- `receipt` was `null` at every cursor before `fresh_verification` and non-null
+  only at `receipt_complete`.
+- The repair recorded `storefront.product_return_badge` moving `30 → 14`.
+- Final receipt hash matched the deterministic local receipt exactly:
+  `sha256:69eef0a35654db8410cee5e09f1afd178df6438c43f691d71c25280c5c873f9b`.
+- Every phase carried `cloud_run=true`, `firestore=true`, and `21` evidence
+  references, including
+  `cloud-run://glasswake-kanon-pulse/revisions/glasswake-kanon-pulse-00003-gsn`.
+
+### Reading Firestore timestamps correctly
+
+The golden path is byte-stable, so each run writes documents that are identical
+to the ones already stored under the same fixed identifiers. Firestore does not
+advance `updateTime` for a byte-identical write — verified directly against this
+project with two identical writes two seconds apart, which returned the same
+`updateTime`.
+
+The consequence matters when presenting this evidence: the Firestore
+`updateTime` values in the table above date from the first deployment and will
+**not** advance when a later demo run executes. They are proof that the backend
+writes to Firestore, not proof of when the most recent run happened. Per-run
+recency is evidenced by the Cloud Run request logs and the run event timestamps
+instead.
 
 ## Runtime and endpoint evidence
 
