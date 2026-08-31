@@ -134,7 +134,7 @@ describe('ControlPlane critical projections', () => {
     expect(main.classList.contains('focus-mode')).toBe(true)
     expect(screen.getByRole('button', { name: 'Expand mission rail' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Expand agent fleet' })).toHaveTextContent('Fleet ·')
-    expect(screen.getByText('Impact map')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Impact map' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Exit focus' }))
     expect(main.classList.contains('focus-mode')).toBe(false)

@@ -35,28 +35,51 @@ function cloudRunRevision(view: HackathonView): string | null {
   return ref?.split('/revisions/')[1] ?? null
 }
 
-function TopBar({
-  view,
-  sourcePreference,
-  transportSource,
-}: {
-  view: HackathonView
-  sourcePreference: RouteASourcePreference
-  transportSource: 'api' | 'fixture'
-}) {
+function SideNav({ view, sourcePreference }: { view: HackathonView; sourcePreference: RouteASourcePreference }) {
+  const groups: Array<{ label: string; items: Array<{ label: string; href: string; active?: boolean; external?: boolean }> }> = [
+    {
+      label: 'Operate',
+      items: [
+        { label: 'Golden Run', href: '#top', active: true },
+        { label: 'Run controls', href: '#deck' },
+        { label: 'Northstar Store', href: demoHref('/store', view.index, sourcePreference), external: true },
+      ],
+    },
+    {
+      label: 'Evidence',
+      items: [
+        { label: 'Impact map', href: '#impact' },
+        { label: 'Agent fleet', href: '#fleet' },
+        { label: 'Evidence ledger', href: '#ledger' },
+      ],
+    },
+  ]
   return (
-    <header className="topbar">
-      <div className="wordmark"><span className="brand-mark"><WaveSine weight="bold" aria-hidden="true" /></span><strong>GlassWake</strong></div>
-      <span className="fixture-badge">SYNTHETIC ENTERPRISE FIXTURE</span>
-      <div className="run-summary"><span>Golden Run</span><strong>{view.summary}</strong></div>
-      <div className="topbar-actions">
-        {view.cloudProof.cloudRun
-          ? <span className="cloud-proof" title={view.cloudProof.evidenceRefs.filter((ref) => ref.startsWith('cloud-run://')).join(' ')}><CloudCheck weight="bold" aria-hidden="true" />Cloud Run{cloudRunRevision(view) ? <code>{cloudRunRevision(view)}</code> : null}</span>
-          : <span className="local-proof" title="No cloud execution data supplied"><CloudSlash aria-hidden="true" />{transportSource === 'api' ? 'Local API' : 'Local fixture'}</span>}
-        <a href={demoHref('/store', view.index, sourcePreference)} className="surface-link"><Browser aria-hidden="true" />Inspect surface</a>
-        <span className={`run-status run-status-${view.index}`}><Pulse aria-hidden="true" />{view.runStatus}</span>
+    <aside className="sidenav" aria-label="GlassWake navigation">
+      <a className="sidenav-brand" href="#top">
+        <span className="brand-mark"><WaveSine weight="bold" aria-hidden="true" /></span>
+        <strong>GlassWake</strong>
+      </a>
+      {groups.map((group) => (
+        <nav key={group.label} aria-label={group.label}>
+          <span className="sidenav-group">{group.label}</span>
+          {group.items.map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              className={`sidenav-item${item.active ? ' sidenav-active' : ''}`}
+            >
+              {item.label}
+              {item.external && <ArrowRight aria-hidden="true" />}
+            </a>
+          ))}
+        </nav>
+      ))}
+      <div className="sidenav-foot">
+        <span>Synthetic enterprise fixture</span>
+        <span>Fortified Enterprise Fleet</span>
       </div>
-    </header>
+    </aside>
   )
 }
 
@@ -343,43 +366,70 @@ export function ControlPlane({
   const theme = new URLSearchParams(window.location.search).get('theme') === 'dark' ? 'dark' : 'light'
 
   return (
-    <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}${focusMode ? ' focus-mode' : ''}${theme === 'light' ? ' theme-light' : ''}`}>
-      <TopBar view={snapshot} sourcePreference={sourcePreference} transportSource={transportSource} />
-      {transportStatus}
-      <div
-        className="control-grid"
-        style={{
-          gridTemplateColumns: `${collapsed.left ? '44px' : '246px'} minmax(0, 1fr) ${collapsed.right ? '44px' : '302px'}`,
-        }}
-      >
-        <ChangeMissionRail
-          view={snapshot}
-          collapsed={collapsed.left}
-          onToggle={() => setCollapsed((value) => ({ ...value, left: !value.left }))}
-        />
-        <ImpactMap view={snapshot} />
-        <FleetRail
-          view={snapshot}
-          collapsed={collapsed.right}
-          onToggle={() => setCollapsed((value) => ({ ...value, right: !value.right }))}
-        />
+    <main className={`control-plane page-layout snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}${focusMode ? ' focus-mode' : ''}${theme === 'light' ? ' theme-light' : ''}`}>
+      <SideNav view={snapshot} sourcePreference={sourcePreference} />
+      <div className="page-main" id="top">
+        <header className="page-head">
+          <div>
+            <h1>Golden Run</h1>
+            <p className="page-sub">{snapshot.summary}</p>
+          </div>
+          <div className="page-actions">
+            <span className="fixture-badge">SYNTHETIC ENTERPRISE FIXTURE</span>
+            {snapshot.cloudProof.cloudRun
+              ? <span className="cloud-proof" title={snapshot.cloudProof.evidenceRefs.filter((ref) => ref.startsWith('cloud-run://')).join(' ')}><CloudCheck weight="bold" aria-hidden="true" />Cloud Run{cloudRunRevision(snapshot) ? <code>{cloudRunRevision(snapshot)}</code> : null}</span>
+              : <span className="local-proof" title="No cloud execution data supplied"><CloudSlash aria-hidden="true" />{transportSource === 'api' ? 'Local API' : 'Local fixture'}</span>}
+            <a href={demoHref('/store', snapshot.index, sourcePreference)} className="surface-link"><Browser aria-hidden="true" />Inspect surface</a>
+            <span className={`run-status run-status-${snapshot.index}`}><Pulse aria-hidden="true" />{snapshot.runStatus}</span>
+          </div>
+        </header>
+
+        {transportStatus}
+
+        <section id="deck" aria-label="Run controls">
+          <RunDeck
+            current={snapshot.index}
+            onSelect={onSelectSnapshot}
+            transportSource={transportSource}
+            runMode={runMode}
+            run={run}
+            playing={playing}
+            starting={starting}
+            onStart={onRunStart}
+            onPause={onRunPause}
+            onNext={onRunNext}
+            onReset={onRunReset}
+            focusMode={focusMode}
+            onToggleFocus={() => setCollapsed(focusMode ? { left: false, right: false } : { left: true, right: true })}
+          />
+        </section>
+
+        <div className="page-duo">
+          <section id="impact" className="page-impact" aria-label="Impact map">
+            <ImpactMap view={snapshot} />
+          </section>
+          <div className="page-side">
+            <section id="mission" aria-label="Cause and mission">
+              <ChangeMissionRail
+                view={snapshot}
+                collapsed={collapsed.left}
+                onToggle={() => setCollapsed((value) => ({ ...value, left: !value.left }))}
+              />
+            </section>
+            <section id="fleet" aria-label="Agent fleet">
+              <FleetRail
+                view={snapshot}
+                collapsed={collapsed.right}
+                onToggle={() => setCollapsed((value) => ({ ...value, right: !value.right }))}
+              />
+            </section>
+          </div>
+        </div>
+
+        <section id="ledger" aria-label="Evidence ledger">
+          <EvidenceDrawer view={snapshot} runtime={runtime} apiBaseUrl={apiBaseUrl} />
+        </section>
       </div>
-      <EvidenceDrawer view={snapshot} runtime={runtime} apiBaseUrl={apiBaseUrl} />
-      <RunDeck
-        current={snapshot.index}
-        onSelect={onSelectSnapshot}
-        transportSource={transportSource}
-        runMode={runMode}
-        run={run}
-        playing={playing}
-        starting={starting}
-        onStart={onRunStart}
-        onPause={onRunPause}
-        onNext={onRunNext}
-        onReset={onRunReset}
-        focusMode={focusMode}
-        onToggleFocus={() => setCollapsed(focusMode ? { left: false, right: false } : { left: true, right: true })}
-      />
     </main>
   )
 }
