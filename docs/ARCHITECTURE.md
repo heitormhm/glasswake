@@ -1,6 +1,6 @@
 # GlassWake Devpost MVP Architecture
 
-Status: `IMPLEMENTED_LOCAL / CLOUD_STAGED`
+Status: `IMPLEMENTED_LOCAL / CLOUD_VERIFIED_PRIVATE`
 
 ## Vertical slice
 
@@ -55,7 +55,7 @@ Receipt -- canonical JSON input/result/receipt hashes
 - `receipts`;
 - `run_views`.
 
-The checked-in rules deny direct client access. Cloud Run's service identity is the intended writer. No cloud evidence is claimed until an authorized deployment and a persisted replay are captured.
+The checked-in rules deny direct client access. The dedicated Cloud Run identity is the server-side writer. Revision `glasswake-kanon-pulse-f777655` persisted and independently re-read the canonical run and receipt; exact evidence is in `docs/CLOUD_PROOF.md`.
 
 ## Selective revalidation
 
@@ -64,4 +64,3 @@ The dependency fixture uses a JSON edge list, not a graph database. Breadth-firs
 ## LoopGuard
 
 Action identity includes mission, phase, executable tool, surface and arguments. Progress identity includes outcome, postcondition, target state and authority. Timestamps, trace IDs, prose and filesystem paths do not create progress. Three identical action/progress pairs produce evidence and a `BLOCK`; the guard never grants or applies a repair.
-

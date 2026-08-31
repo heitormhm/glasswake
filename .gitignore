@@ -8,3 +8,6 @@ vite.config.d.ts
 __pycache__/
 .pytest_cache/
 .venv/
+.env
+.env.*
+!.env.example

@@ -10,8 +10,8 @@ The proof chain is:
 
 - Local deterministic backend: implemented and covered by fresh tests.
 - `HackathonView`: frozen JSON Schema plus ten fixture snapshots.
-- Google ADK and Gemini: real optional integration code; live model call not performed.
-- Cloud Run and Firestore: deployable/persistent path implemented; no deployment or cloud write performed.
+- Google ADK and Gemini: a structured Vertex AI review passed on revision `glasswake-kanon-pulse-f777655`.
+- Cloud Run and Firestore: private deployment and persisted replay are `CLOUD_VERIFIED`; see `docs/CLOUD_PROOF.md`.
 - Route B: the Vite/React control plane is preserved and now consumes the canonical snapshots through an explicit `HackathonView` adapter.
 
 ## Local verification
@@ -38,7 +38,7 @@ Important endpoints:
 - `POST /v1/demo/replay`
 - `POST /v1/gemini/review` — live and credential-dependent; not used by deterministic tests
 
-The guarded deploy path is documented in `docs/CLOUD_PROOF.md`. Do not deploy, enter credentials, enable billing, publish or submit without separate owner authority.
+The exact deployed revision and its immutable proof are documented in `docs/CLOUD_PROOF.md`. Public access, a successor deployment, publication, push and submission still require separate owner authority.
 
 ## Route B frontend
 

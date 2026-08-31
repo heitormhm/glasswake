@@ -2,7 +2,7 @@
 
 ## Status
 
-`GREEN_MVP_BASE_LOCAL` is reached at the authorized local boundary. The deterministic backend, frozen projection and Route B adapter/rendering tests pass. This does not mean cloud-verified, live-transport-integrated, published or submitted.
+`CLOUD_VERIFIED_PRIVATE` is reached. The deterministic backend, frozen projection, Route B adapter/rendering tests, Vertex AI structured review and Firestore-backed Cloud Run replay pass. This does not mean live-transport-integrated, public, published or submitted.
 
 ## Route A outputs
 
@@ -21,6 +21,4 @@ The pre-existing `route-b.fixture.v2` structure is not the shared contract. The 
 
 ## Exact next integration action
 
-Obtain explicit owner authorization for a named Google Cloud project, region, billing boundary and service identity. Then deploy the tested source revision, execute one Gemini structured review and one Firestore-backed replay on the Cloud Run revision, capture immutable evidence, and confirm that the returned receipt hash matches the local receipt. Do not infer deployment authority from this local handoff.
-
-For a later live-transport enhancement, connect Route B to `/v1/demo/replay` without changing the frozen adapter semantics and retain fixture fallback for the deterministic Devpost narrative.
+Repair the successor revision's externally intercepted `/healthz` path or select a non-reserved health endpoint, then connect Route B to the private `/v1/demo/replay` transport without changing the frozen adapter semantics. Retain fixture fallback for the deterministic Devpost narrative. Public access, video recording, publication and Devpost submission remain separate owner gates.

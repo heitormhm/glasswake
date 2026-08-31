@@ -11,7 +11,7 @@ Status vocabulary: `REPRODUCED_CURRENT`, `MOCKED / SYNTHETIC`, `STAGED`, `BLOCKE
 | 2:05–2:35 | Governance | `05_authority_review.json`; one RepairBrief and `REPAIR_1` | `REPRODUCED_CURRENT` deterministic |
 | 2:35–3:10 | Repair + fresh verify | `06_repair_applied.json`, `07_fresh_verification.json` | `REPRODUCED_CURRENT` deterministic |
 | 3:10–3:35 | Receipt | `08_receipt_complete.json`; before/after, postconditions, hashes | `REPRODUCED_CURRENT` deterministic |
-| 3:35–3:50 | Google proof | Cloud Run revision/log plus Firestore run/receipt | `STAGED / NOT_DEPLOYED` |
+| 3:35–3:50 | Google proof | Cloud Run revision/log plus Firestore run/receipt | `CLOUD_VERIFIED_PRIVATE` |
 | 3:50–4:00 | Close | receipt narrative | `REPRODUCED_CURRENT` locally; video not recorded |
 
 Do not record the Devpost video until:
@@ -19,6 +19,6 @@ Do not record the Devpost video until:
 - every canonical snapshot validates against the frozen schema (`PASS_LOCAL`);
 - Route B renders the Route A snapshots without semantic inference (`PASS_LOCAL_CONTRACT`);
 - the deterministic API replay and frontend rendering suites pass (`PASS_LOCAL`; live HTTP transport remains a later enhancement);
-- an authorized Cloud Run deployment and Firestore write are captured;
+- the captured Cloud Run and Firestore evidence in `docs/CLOUD_PROOF.md` is preserved with the demo source revision;
 - the final UI displays cloud proof only when the backend supplies it;
 - disclosure/IP review permits the intended submission/publication mode.

@@ -3,13 +3,13 @@
 Evidence date: `2026-08-31`  
 Tested source commit: `303ba792af7b9020931ff912f9021743311d5bb1`  
 Branch: `route-b-v2`  
-Scope: deterministic local MVP only; no Google Cloud deployment, Firestore write, live Gemini call, push, publication or Devpost submission.
+Scope: deterministic local MVP gate preceding the separately authorized cloud proof. No push, publication or Devpost submission was performed.
 
 ## Gate classification
 
-`GREEN_MVP_BASE_LOCAL / CLOUD_PROOF_STAGED_NOT_DEPLOYED / NOT_SUBMITTED`
+`GREEN_MVP_BASE_LOCAL / SUBSEQUENT_CLOUD_PROOF_VERIFIED / NOT_SUBMITTED`
 
-The tested source commit meets the master prompt's `GREEN_MVP_BASE` conditions at the authorized local boundary: the deterministic golden path passes, the frontend contract and snapshots are frozen, the Google integrations are implemented and locally import-tested, deploy/persistence paths exist, reuse is disclosed, and the tested tree was clean. Actual Cloud Run, Firestore and Gemini execution remain unclaimed because no cloud project, credentials, spend or deployment authority was supplied.
+The tested source commit meets the master prompt's `GREEN_MVP_BASE` conditions at the local boundary: the deterministic golden path passes, the frontend contract and snapshots are frozen, the Google integrations are implemented and locally import-tested, deploy/persistence paths exist, reuse is disclosed, and the tested tree was clean. A later explicit authorization deployed exact commit `f7776551726083f4c4ce2d56bce81df0ed102690`; live proof is recorded separately in `docs/CLOUD_PROOF.md`.
 
 ## Reproduced checks
 
@@ -39,5 +39,4 @@ The tested source commit meets the master prompt's `GREEN_MVP_BASE` conditions a
 - The Northstar scenario and all repaired values are synthetic fixtures.
 - `09_loopguard_recovery.json` is backend recovery evidence and is intentionally outside the S0-S8 UI narrative.
 - The UI is fixture-first by the frozen integration contract. It does not invent backend decisions or cloud proof.
-- A real Google proof requires separate owner authorization and immutable evidence from the same deployed source revision.
-
+- The subsequent Google proof used the same authorized source revision and preserved the synthetic-fixture boundary.

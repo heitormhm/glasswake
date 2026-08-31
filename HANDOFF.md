@@ -9,4 +9,5 @@
 - Golden fixture: `?state=0..8`; developer-only sequencer is visible in the footer.
 - Route A fixture regeneration: `PYTHONPATH=src python3 -m hackathon.cli --write`.
 - Validation: deterministic Route A CLI, `npm run test:run`, `npm run build`, and `npm run capture`.
-- Known gap: a live Route A transport and real Cloud proof are not connected. The UI consumes the frozen validated Route A snapshots through `routeAAdapter.ts`, remains fixture-first, and explicitly makes no Cloud execution claim.
+- Cloud proof: private revision `glasswake-kanon-pulse-f777655` passed Gemini and Firestore replay with the exact receipt; see `docs/CLOUD_PROOF.md`.
+- Known gap: live Route A transport is not connected to Route B. The UI remains fixture-first through `routeAAdapter.ts` and must not infer the separately captured cloud proof.
