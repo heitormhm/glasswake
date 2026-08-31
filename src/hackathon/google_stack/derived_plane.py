@@ -18,7 +18,10 @@ incident summary can contradict the receipt it claims to describe.
 from __future__ import annotations
 
 import base64
+import io
 import os
+import re
+import wave
 from dataclasses import dataclass
 from typing import Any
 
@@ -30,6 +33,24 @@ DERIVED_LOCATION = "us-central1"
 DEFAULT_LYRIA_MODEL = "lyria-002"
 DEFAULT_VEO_MODEL = "veo-3.1-fast-generate-001"
 DEFAULT_TTS_MODEL = "gemini-2.5-flash-tts"
+
+
+def pcm_to_wav(pcm: bytes, mime_type: str) -> bytes:
+    """Wrap raw PCM in a WAV container so a browser can actually play it.
+
+    Gemini TTS returns headerless L16 PCM (`audio/L16;codec=pcm;rate=24000`).
+    An <audio> element cannot decode that, so the sample rate is read off the
+    mime type and a RIFF header is added here rather than in the client.
+    """
+    rate_match = re.search(r"rate=(\d+)", mime_type or "")
+    rate = int(rate_match.group(1)) if rate_match else 24000
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)  # L16 is 16-bit
+        wav.setframerate(rate)
+        wav.writeframes(pcm)
+    return buffer.getvalue()
 
 
 class DerivedOutputUnavailable(RuntimeError):
@@ -218,14 +239,17 @@ class DerivedIntelligencePlane:
             )
             part = response.candidates[0].content.parts[0]
             data = part.inline_data.data
-            encoded = base64.b64encode(data).decode() if isinstance(data, bytes) else data
+            raw = data if isinstance(data, bytes) else base64.b64decode(data)
+            source_mime = getattr(part.inline_data, "mime_type", "") or ""
+            if "L16" in source_mime or "pcm" in source_mime.lower():
+                raw = pcm_to_wav(raw, source_mime)
             return DerivedOutput(
                 kind="voice_brief",
                 model=self.tts_model,
                 available=True,
                 source_receipt=receipt_id,
-                media_base64=encoded,
-                mime_type=getattr(part.inline_data, "mime_type", "audio/pcm"),
+                media_base64=base64.b64encode(raw).decode(),
+                mime_type="audio/wav",
                 script=script,
             )
         except Exception as exc:

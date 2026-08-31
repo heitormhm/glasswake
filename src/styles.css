@@ -2944,3 +2944,55 @@ time {
 @media (max-width: 1180px) {
   .architecture-panel { grid-template-columns: 1fr; gap: 18px; }
 }
+
+/* Executive brief — derived output at the sealed receipt */
+
+.executive-brief {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 9px;
+  margin-top: 13px;
+  padding: 13px 15px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9px;
+  background: rgb(7 17 31 / 0.6);
+}
+
+.brief-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.brief-listen {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 13px;
+  border: 1px solid var(--state-active);
+  border-radius: 7px;
+  color: var(--bg-canvas);
+  background: var(--state-active);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.brief-listen:hover:not(:disabled) { filter: brightness(1.08); }
+.brief-listen:disabled { opacity: 0.5; cursor: progress; }
+.brief-listen svg { width: 13px; }
+
+.executive-brief audio { width: 100%; height: 32px; }
+
+.brief-script { margin: 0; color: var(--text-secondary); font-size: 10.5px; line-height: 1.5; }
+
+.brief-meta { display: flex; gap: 22px; margin: 0; }
+.brief-meta div { display: grid; gap: 2px; }
+.brief-meta dt { color: var(--text-tertiary); font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+.brief-meta dd { margin: 0; color: var(--text-secondary); font-family: 'DM Mono', monospace; font-size: 9px; }
+
+.brief-unavailable { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--state-review); font-size: 9.5px; }
+.brief-unavailable svg { flex: 0 0 13px; width: 13px; }
+
+.brief-authority { display: flex; flex-wrap: wrap; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.brief-authority li { display: flex; align-items: center; gap: 5px; color: var(--state-verified); font-family: 'DM Mono', monospace; font-size: 8.5px; letter-spacing: 0.04em; }
+.brief-authority svg { width: 11px; }
+
+.brief-note { margin: 0; color: var(--text-tertiary); font-size: 8.5px; }

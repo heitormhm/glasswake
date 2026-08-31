@@ -72,4 +72,24 @@ describe('ControlPlane critical projections', () => {
     expect(screen.queryByText('Google ADK')).not.toBeInTheDocument()
     expect(screen.getByText(/reports no cloud execution evidence/)).toBeInTheDocument()
   })
+
+  it('offers the executive brief only at the sealed receipt and states its zero authority', () => {
+    render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} apiBaseUrl="http://127.0.0.1:8080" />)
+    expect(screen.getByRole('button', { name: /Listen/ })).toBeInTheDocument()
+    expect(screen.getByText('receipt-bound')).toBeInTheDocument()
+    expect(screen.getByText('cannot mutate state')).toBeInTheDocument()
+    expect(screen.getByText(/assembled from receipt fields, not written by a model/)).toBeInTheDocument()
+  })
+
+  it('reports an unavailable derived output without disturbing the receipt', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+    render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} apiBaseUrl="http://127.0.0.1:8080" />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Listen/ }))
+    expect(await screen.findByText(/Derived output unavailable/)).toBeInTheDocument()
+    // The receipt is still sealed and still shown.
+    expect(screen.getByTestId('receipt-panel')).toBeInTheDocument()
+    expect(screen.getByText('5 of 5 postconditions passed')).toBeInTheDocument()
+    vi.unstubAllGlobals()
+  })
 })

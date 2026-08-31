@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
   Check,
@@ -8,8 +8,10 @@ import {
   MagnifyingGlass,
   Receipt,
   ShieldCheck,
+  SpeakerHigh,
   SpinnerGap,
   TreeStructure,
+  WarningOctagon,
 } from '@phosphor-icons/react'
 import type { RouteARuntime } from '../app/routeAClient'
 import type { AuthorityData, EvidenceData, HackathonView, ReceiptData, VerificationData } from '../app/types'
@@ -121,7 +123,92 @@ function VerificationPanel({ verification }: { verification: VerificationData | 
   )
 }
 
-function ReceiptPanel({ receipt }: { receipt: ReceiptData | null }) {
+
+interface DerivedOutputPayload {
+  available: boolean
+  model: string
+  reason: string | null
+  script: string | null
+  mime_type: string | null
+  media_base64?: string
+  provenance: { source_receipt: string | null; derived_from: string }
+  authority: Record<string, string>
+}
+
+/**
+ * Derived output is fetched only on demand and only at the sealed receipt.
+ * A failure here is rendered as an unavailable brief, never as a broken
+ * receipt: the run was already closed and independently verified before this
+ * component existed.
+ */
+function ExecutiveBrief({ apiBaseUrl }: { apiBaseUrl: string | null }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle')
+  const [voice, setVoice] = useState<DerivedOutputPayload | null>(null)
+  const [detail, setDetail] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const listen = async () => {
+    if (!apiBaseUrl) {
+      setState('unavailable')
+      setDetail('No live origin. Derived output requires the Route A service.')
+      return
+    }
+    setState('loading')
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/demo/derived/voice`, { method: 'POST' })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const payload = (await response.json()) as DerivedOutputPayload
+      if (!payload.available || !payload.media_base64) {
+        setState('unavailable')
+        setDetail(payload.reason ?? 'The derived model reported no output.')
+        return
+      }
+      setVoice(payload)
+      setState('ready')
+      window.setTimeout(() => void audioRef.current?.play(), 0)
+    } catch (error) {
+      setState('unavailable')
+      setDetail(error instanceof Error ? error.message : 'Derived output unavailable.')
+    }
+  }
+
+  return (
+    <section className="executive-brief" aria-label="Executive brief">
+      <div className="brief-head">
+        <SectionLabel>Executive brief</SectionLabel>
+        <button type="button" className="brief-listen" onClick={() => void listen()} disabled={state === 'loading'}>
+          {state === 'loading' ? <SpinnerGap className="semantic-spin" aria-hidden="true" /> : <SpeakerHigh weight="fill" aria-hidden="true" />}
+          {state === 'loading' ? 'Generating…' : state === 'ready' ? 'Replay' : 'Listen'}
+        </button>
+      </div>
+
+      {state === 'ready' && voice && (
+        <>
+          <audio ref={audioRef} controls src={`data:${voice.mime_type};base64,${voice.media_base64}`} />
+          <p className="brief-script">{voice.script}</p>
+          <dl className="brief-meta">
+            <div><dt>Voice</dt><dd>{voice.model}</dd></div>
+            <div><dt>Source</dt><dd>{voice.provenance.source_receipt}</dd></div>
+          </dl>
+        </>
+      )}
+
+      {state === 'unavailable' && (
+        <p className="brief-unavailable"><WarningOctagon aria-hidden="true" />Derived output unavailable. The sealed receipt is unaffected.{detail ? ` (${detail})` : ''}</p>
+      )}
+
+      <ul className="brief-authority">
+        <li><Check aria-hidden="true" />read-only</li>
+        <li><Check aria-hidden="true" />receipt-bound</li>
+        <li><Check aria-hidden="true" />cannot mutate state</li>
+        <li><Check aria-hidden="true" />fail-soft</li>
+      </ul>
+      <p className="brief-note">Spoken text is assembled from receipt fields, not written by a model.</p>
+    </section>
+  )
+}
+
+function ReceiptPanel({ receipt, apiBaseUrl }: { receipt: ReceiptData | null; apiBaseUrl: string | null }) {
   if (!receipt) {
     return <div className="drawer-empty"><Receipt aria-hidden="true" /><div><strong>No receipt yet</strong><span>Closure appears only after fresh verification passes.</span></div></div>
   }
@@ -139,6 +226,7 @@ function ReceiptPanel({ receipt }: { receipt: ReceiptData | null }) {
         <div><dt>Skipped</dt><dd>{receipt.skippedNodes}</dd></div>
       </dl>
       <div className="receipt-hash"><Fingerprint aria-hidden="true" /><span>{receipt.verificationResult}</span><code>{receipt.receiptHash.slice(0, 17)}…{receipt.receiptHash.slice(-4)}</code></div>
+      <ExecutiveBrief apiBaseUrl={apiBaseUrl} />
     </article>
   )
 }
@@ -202,7 +290,15 @@ function ArchitecturePanel({ view, runtime }: { view: HackathonView; runtime: Ro
   )
 }
 
-export function EvidenceDrawer({ view, runtime = null }: { view: HackathonView; runtime?: RouteARuntime | null }) {
+export function EvidenceDrawer({
+  view,
+  runtime = null,
+  apiBaseUrl = null,
+}: {
+  view: HackathonView
+  runtime?: RouteARuntime | null
+  apiBaseUrl?: string | null
+}) {
   const [activeTab, setActiveTab] = useState<EvidenceTab>(() => preferredTab(view))
   useEffect(() => setActiveTab(preferredTab(view)), [view.index])
 
@@ -232,7 +328,7 @@ export function EvidenceDrawer({ view, runtime = null }: { view: HackathonView; 
         {activeTab === 'Crumbs' && <CrumbsPanel view={view} />}
         {activeTab === 'Authority' && <AuthorityPanel authority={view.authority} />}
         {activeTab === 'Verification' && <VerificationPanel verification={view.verification} />}
-        {activeTab === 'Receipt' && <ReceiptPanel receipt={view.receipt} />}
+        {activeTab === 'Receipt' && <ReceiptPanel receipt={view.receipt} apiBaseUrl={apiBaseUrl} />}
         {activeTab === 'Architecture' && <ArchitecturePanel view={view} runtime={runtime} />}
       </div>
     </section>

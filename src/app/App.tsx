@@ -96,6 +96,7 @@ export function App() {
       onRunNext={goldenRun.next}
       onRunReset={goldenRun.reset}
       runtime={dataSource.kind === 'live' ? dataSource.runtime : null}
+      apiBaseUrl={dataSource.kind === 'live' ? dataSource.apiBaseUrl : null}
     />
   )
 }

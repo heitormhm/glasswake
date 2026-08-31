@@ -257,6 +257,7 @@ export function ControlPlane({
   onRunNext = () => {},
   onRunReset = () => {},
   runtime = null,
+  apiBaseUrl = null,
 }: {
   snapshot: HackathonView
   onSelectSnapshot: (index: number) => void
@@ -272,6 +273,7 @@ export function ControlPlane({
   onRunNext?: () => void
   onRunReset?: () => void
   runtime?: RouteARuntime | null
+  apiBaseUrl?: string | null
 }) {
   return (
     <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}`}>
@@ -282,7 +284,7 @@ export function ControlPlane({
         <ImpactMap view={snapshot} />
         <FleetRail view={snapshot} />
       </div>
-      <EvidenceDrawer view={snapshot} runtime={runtime} />
+      <EvidenceDrawer view={snapshot} runtime={runtime} apiBaseUrl={apiBaseUrl} />
       <RunDeck
         current={snapshot.index}
         onSelect={onSelectSnapshot}
