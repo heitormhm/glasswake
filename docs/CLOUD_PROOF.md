@@ -2,7 +2,7 @@
 
 Current status: `CLOUD_VERIFIED / PRIVATE_SERVICE / NOT_PUBLISHED / NOT_SUBMITTED`
 
-Serving revision: `glasswake-kanon-pulse-00004-w8k`.
+Serving revision: `glasswake-kanon-pulse-00005-6dd`.
 
 Evidence captured on `2026-08-31` from a deployment built only from Git commit `f7776551726083f4c4ce2d56bce81df0ed102690`.
 
@@ -161,6 +161,32 @@ The consequence matters when presenting this evidence: the Firestore
 writes to Firestore, not proof of when the most recent run happened. Per-run
 recency is evidenced by the Cloud Run request logs and the run event timestamps
 instead.
+
+## Browser-verified cloud demo
+
+Revision `glasswake-kanon-pulse-00005-6dd` was driven end to end from the Route B
+control plane in a browser, with `gcloud run services proxy` on
+`127.0.0.1:8090` supplying the identity token and `VITE_ROUTE_A_BASE_URL`
+pointed at it. The service stayed private throughout; no IAM was loosened.
+
+Observed on screen:
+
+- Source rail: `Cloud Run validated` — "9/9 canonical states passed schema and
+  sequence validation on revision `glasswake-kanon-pulse-00005-6dd`."
+- Top bar: `Cloud Run · glasswake-kanon-pulse-00005-6dd`. The local-origin badge
+  was absent.
+- Run `gw-run-0d4d5d1f6de4` executed in `6.5ms` and replayed `9/9` phases, each
+  stamped with a distinct server-side timestamp from `19:52:23Z` to `19:52:46Z`.
+- Receipt sealed only at the final phase.
+- Final graph preserved run history: `3` repaired, `3` verified, `6` skipped.
+- Storefront at S5 showed `Authoritative policy 14 days` against
+  `This surface 30 days · STALE`; at S6 it read `Matches · 14 days`.
+- The storefront chrome named the same origin: `GlassWake monitored · Cloud Run`.
+
+The origin label is derived from the backend's own `cloud_proof`, which Cloud
+Run populates from the `K_SERVICE` and `K_REVISION` it injects into the runtime.
+A local origin therefore cannot render as Cloud Run, and both directions are
+pinned by tests.
 
 ## Runtime and endpoint evidence
 

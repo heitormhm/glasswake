@@ -61,6 +61,12 @@ export function App() {
 
   const transportStatus = <DataSourceStatus state={dataSource} onRetry={retry} onUseApi={useApi} />
 
+  // Name the origin the same way everywhere; the storefront must not say
+  // "Live API" while the control plane says "Cloud Run".
+  const originLabel = dataSource.kind === 'live'
+    ? (dataSource.cloudRun ? 'Cloud Run' : 'Live API')
+    : 'Fixture'
+
   if (path === '/store' || path.startsWith('/store/')) {
     return (
       <NorthstarStore
@@ -69,6 +75,7 @@ export function App() {
         sourcePreference={sourcePreference}
         transportSource={dataSource.source}
         transportStatus={transportStatus}
+        originLabel={originLabel}
       />
     )
   }

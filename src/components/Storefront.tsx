@@ -175,13 +175,16 @@ export function NorthstarStore({
   sourcePreference = 'auto',
   transportSource = 'fixture',
   transportStatus,
+  originLabel,
 }: {
   path: string
   snapshot: HackathonView
   sourcePreference?: RouteASourcePreference
   transportSource?: 'api' | 'fixture'
   transportStatus?: ReactNode
+  originLabel?: string
 }) {
+  const origin = originLabel ?? (transportSource === 'api' ? 'Live API' : 'Fixture')
   return (
     <div className="northstar-store">
       <StoreHeader state={snapshot.index} sourcePreference={sourcePreference} />
@@ -189,7 +192,7 @@ export function NorthstarStore({
         <details className="store-demo-details">
           <summary>
             <span className={`store-demo-dot source-${transportSource}`} aria-hidden="true" />
-            GlassWake monitored · {transportSource === 'api' ? 'Live API' : 'Fixture'}
+            GlassWake monitored · {origin}
             <em>Demo details</em>
           </summary>
           {transportStatus}
