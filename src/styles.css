@@ -1226,9 +1226,13 @@ time {
 
 .drawer-state-authority_ready,
 .drawer-state-repair_applied,
-.drawer-state-verifying,
-.drawer-state-receipt_complete {
+.drawer-state-verifying {
   height: 252px;
+}
+
+/* Room for the receipt and its brief, without starving the impact map. */
+.drawer-state-receipt_complete {
+  height: 296px;
 }
 
 .drawer-tabs-row {
@@ -2950,9 +2954,9 @@ time {
 .executive-brief {
   grid-column: 1 / -1;
   display: grid;
-  gap: 9px;
-  margin-top: 13px;
-  padding: 13px 15px;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 11px 14px;
   border: 1px solid var(--border-subtle);
   border-radius: 9px;
   background: rgb(7 17 31 / 0.6);
@@ -2979,11 +2983,12 @@ time {
 .brief-listen:disabled { opacity: 0.5; cursor: progress; }
 .brief-listen svg { width: 13px; }
 
-.executive-brief audio { width: 100%; height: 32px; }
+.executive-brief audio { width: 100%; height: 30px; }
 
-.brief-script { margin: 0; color: var(--text-secondary); font-size: 10.5px; line-height: 1.5; }
+.brief-script { margin: 0; color: var(--text-secondary); font-size: 10px; line-height: 1.45; }
 
 .brief-meta { display: flex; gap: 22px; margin: 0; }
+.executive-brief { align-content: start; }
 .brief-meta div { display: grid; gap: 2px; }
 .brief-meta dt { color: var(--text-tertiary); font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
 .brief-meta dd { margin: 0; color: var(--text-secondary); font-family: 'DM Mono', monospace; font-size: 9px; }
@@ -2995,4 +3000,4 @@ time {
 .brief-authority li { display: flex; align-items: center; gap: 5px; color: var(--state-verified); font-family: 'DM Mono', monospace; font-size: 8.5px; letter-spacing: 0.04em; }
 .brief-authority svg { width: 11px; }
 
-.brief-note { margin: 0; color: var(--text-tertiary); font-size: 8.5px; }
+.brief-note { margin: 0; color: var(--text-tertiary); font-size: 8.5px; line-height: 1.2; }
