@@ -71,6 +71,37 @@ Gemma sits **before** the core and can only propose. The authority gate,
 the adapter, and the verifier are the only components that may decide, mutate,
 and prove respectively — and no two of those are the same component.
 
+## Additional Google AI models
+
+Four beyond the mandatory Gemini, each integrated and evidenced in code, tests
+and the running service.
+
+**Gemma 4** runs *before* the governed core as candidate-only Wake Triage. It
+may propose a domain, risk class and candidate watchzones; deterministic
+validation drops anything non-canonical. Asked to triage the Northstar change,
+Gemma returns `["RETURNS", "CUSTOMER_SERVICE"]` — one canonical, one invented —
+and the validator keeps the first and names the second as rejected. Tests prove
+the canonical watchzone summary is byte-identical whether triage returns a good
+answer, a confidently wrong one, or nothing parseable.
+
+**Lyria, Veo and Gemini TTS** sit *after* the sealed receipt in the Derived
+Intelligence Plane:
+
+    read-only · receipt-bound · zero write authority · fail-soft
+
+`require_sealed_receipt` refuses to produce any derived output without an
+independently verified receipt. The spoken briefing is assembled from receipt
+fields rather than written by a model, because a model that freestyles an
+incident summary can contradict the receipt it claims to describe. A total
+derived-model outage is covered by a test: every output reports unavailable, and
+the receipt and verification are untouched.
+
+```text
+CHANGE → Gemma 4 (candidate only) → deterministic validation
+       → GOVERNED CORE (ADK + Gemini 3.7) → SEALED RECEIPT
+       → Derived plane: Gemini TTS · Lyria · Veo   [zero authority]
+```
+
 ## Google Cloud stack
 
 | Requirement | This project |
@@ -79,6 +110,9 @@ and prove respectively — and no two of those are the same component.
 | Google agent framework | **Google ADK** orchestration + **GenAI SDK** |
 | Google Cloud service | **Cloud Run** (execution) + **Firestore** (persistence) |
 | Additional model | **Gemma 4** (`gemma-4-26b-a4b-it-maas`) — candidate-only Wake Triage |
+| Additional model | **Lyria** (`lyria-002`) — receipt-derived executive audio bed |
+| Additional model | **Veo 3.1** (`veo-3.1-fast-generate-001`) — receipt-derived incident replay |
+| Additional model | **Gemini TTS** (`gemini-2.5-flash-tts`) — speaks the deterministic briefing |
 
 Runtime evidence is not asserted by the application: Cloud Run injects
 `K_SERVICE` and `K_REVISION` into its own runtime, and the serving revision is

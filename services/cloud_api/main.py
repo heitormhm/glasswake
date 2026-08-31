@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from hackathon.agent_catalog import catalog_projection
 from hackathon.contracts import schema_sha256
 from hackathon.fleet import SNAPSHOT_STATES, GoldenPathRunner
+from hackathon.google_stack.derived_plane import DerivedIntelligencePlane, executive_script
 from hackathon.google_stack.firestore_store import FirestoreRunStore, InMemoryRunStore
 from hackathon.google_stack.gemini import DEFAULT_GEMINI_MODEL, GeminiStructuredReviewer
 from hackathon.google_stack.gemma_triage import DEFAULT_GEMMA_MODEL, GemmaWakeTriage
@@ -308,3 +309,42 @@ def wake_triage(change: dict[str, Any] | None = None) -> dict[str, Any]:
         "validation": validation.projection(),
         "canonical_scope_affected": False,
     }
+
+
+def _sealed_view() -> dict[str, Any]:
+    return copy.deepcopy(_snapshots()["receipt_complete"])
+
+
+@app.get("/v1/demo/derived/brief")
+def derived_brief() -> dict[str, Any]:
+    """The deterministic executive script. No model writes this text."""
+    view = _sealed_view()
+    return {
+        "script": executive_script(view),
+        "source_receipt": view["receipt"]["receipt_id"],
+        "generated_by": "deterministic_receipt_projection",
+    }
+
+
+@app.post("/v1/demo/derived/{kind}")
+def derived_output(kind: str) -> dict[str, Any]:
+    """Derived intelligence plane. Read-only, receipt-bound, fail-soft.
+
+    A failure here is reported as an unavailable derived output with HTTP 200.
+    The receipt was sealed and independently verified before any of this ran, so
+    a derived-model outage must never present as a failed run.
+    """
+    plane = DerivedIntelligencePlane()
+    producers = {
+        "audio": plane.audio_brief,
+        "voice": plane.voice_brief,
+        "replay": plane.incident_replay,
+    }
+    if kind not in producers:
+        raise HTTPException(status_code=404, detail="Unknown derived output.")
+
+    output = producers[kind](_sealed_view())
+    payload = output.projection()
+    if output.media_base64:
+        payload["media_base64"] = output.media_base64
+    return payload
