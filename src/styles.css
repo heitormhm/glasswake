@@ -849,10 +849,10 @@ time {
   width: 144px;
   height: 56px;
   padding: 0 10px;
-  border: 1px solid #2c3d52;
+  border: 1px solid var(--border-subtle);
   border-radius: 9px;
-  color: #94a3b6;
-  background: #0d1a2a;
+  color: var(--text-secondary);
+  background: var(--bg-node);
   box-shadow: 0 8px 20px -14px rgb(0 0 0 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.025);
   font-family: 'DM Sans', sans-serif;
   transition: border-color var(--duration-major) var(--ease-out), color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out), transform var(--duration-major) var(--ease-out);
@@ -1073,7 +1073,7 @@ time {
 .agent-card.verifier-card {
   margin-top: 5px;
   border-top: 1px solid #3a4b63;
-  background: #0d1a2b;
+  background: var(--bg-node);
 }
 
 .snapshot-verifying .verifier-card,
@@ -1163,7 +1163,7 @@ time {
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
   color: var(--text-tertiary);
-  background: #0a1524;
+  background: var(--bg-inset);
   font-family: 'DM Mono', monospace;
   font-size: 7.8px;
   letter-spacing: 0.02em;
@@ -1220,7 +1220,7 @@ time {
   height: 192px;
   overflow: hidden;
   border-bottom: 1px solid var(--border-subtle);
-  background: #0a1524;
+  background: var(--bg-elevated);
   transition: height var(--duration-major) var(--ease-out);
 }
 
@@ -1836,7 +1836,7 @@ time {
   display: grid;
   gap: 10px;
   padding: 12px 15px 13px;
-  background: #060e19;
+  background: var(--bg-shell);
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -1855,7 +1855,7 @@ time {
   border: 1px solid var(--border-subtle);
   border-radius: 7px;
   color: var(--text-secondary);
-  background: #0a1524;
+  background: var(--bg-inset);
   font-size: 10px;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -1933,7 +1933,7 @@ time {
   border: 1px solid var(--border-subtle);
   border-radius: 7px;
   color: var(--text-tertiary);
-  background: #07111f;
+  background: var(--bg-inset);
   text-align: left;
   cursor: pointer;
 }
@@ -3371,3 +3371,159 @@ time {
   font-size: 8.5px;
   letter-spacing: 0.08em;
 }
+
+/* ==========================================================================
+   Light theme + bento layer — scoped to .theme-light so the dark cockpit
+   survives untouched behind ?theme=dark.
+   ========================================================================== */
+
+.control-plane.theme-light {
+  --bg-canvas: #f4f4f0;
+  --bg-elevated: #ffffff;
+  --bg-shell: #ffffff;
+  --bg-inset: #f1f2ee;
+  --bg-node: #ffffff;
+  --surface-1: #ffffff;
+  --surface-2: #f7f7f4;
+  --border-subtle: #e3e4de;
+  --border-strong: #c9ccc3;
+  --text-primary: #17222e;
+  --text-secondary: #45566a;
+  --text-tertiary: #64748b;
+  --state-active: #0b7fb3;
+  --state-verified: #177a4f;
+  --state-review: #a06a10;
+  --state-blocked: #bb3a44;
+  --state-inferred: #6d5bd0;
+  --state-muted: #8a94a1;
+  --shadow-card: 0 18px 36px -22px rgb(23 34 46 / 0.16);
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+/* Bento: the canvas breathes; each region becomes a discrete card. */
+
+.theme-light.control-plane {
+  gap: 14px;
+  padding: 14px 16px 12px;
+}
+
+.theme-light .topbar,
+.theme-light .transport-rail,
+.theme-light .control-grid > *,
+.theme-light .evidence-drawer,
+.theme-light .run-deck {
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+}
+
+.theme-light .control-grid {
+  gap: 14px;
+  border-bottom: 0;
+}
+
+.theme-light .change-rail,
+.theme-light .fleet-rail,
+.theme-light .impact-panel {
+  overflow: hidden;
+}
+
+.theme-light .evidence-drawer { border-bottom: 1px solid var(--border-subtle); }
+
+/* Chrome that assumed a dark shell */
+
+.theme-light .wordmark strong,
+.theme-light .run-summary strong { color: var(--text-primary); }
+.theme-light .fixture-badge { border-color: var(--border-subtle); color: var(--text-tertiary); background: var(--bg-inset); }
+.theme-light .cloud-proof { background: rgb(23 122 79 / 0.07); }
+.theme-light .run-status { color: var(--state-active); }
+
+/* Graph: paper instead of night sky */
+
+.theme-light .graph-stage,
+.theme-light .impact-graph { background: transparent; }
+.theme-light .impact-node {
+  box-shadow: 0 10px 22px -16px rgb(23 34 46 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+.theme-light .impact-edge { opacity: 0.55; }
+.theme-light .trigger-crumb { background: rgb(11 127 179 / 0.06); }
+.theme-light .graph-metrics strong { color: var(--text-primary); }
+
+/* Drawer + deck internals that used dark tints */
+
+.theme-light .drawer-tabs button { color: var(--text-tertiary); }
+.theme-light .drawer-tabs button.active { color: var(--state-active); }
+.theme-light .phase-track button { background: var(--bg-inset); }
+.theme-light .phase-track .active button { background: rgb(11 127 179 / 0.08); }
+.theme-light .run-identity strong { color: var(--state-active); }
+.theme-light .run-button-go { color: #ffffff; }
+.theme-light .brief-listen { color: #ffffff; }
+.theme-light .brief-listen-lyria { color: var(--state-active); background: transparent; }
+.theme-light .executive-brief { background: var(--bg-inset); }
+.theme-light .ext-status,
+.theme-light .ext-node { background: var(--bg-inset); }
+.theme-light .rail-collapse { background: var(--bg-inset); }
+.theme-light .agent-card,
+.theme-light .agent-card.verifier-card { background: var(--surface-2); }
+.theme-light .change-card,
+.theme-light .authority-gate,
+.theme-light .receipt-panel { background: var(--surface-2); }
+.theme-light .mission-completed i,
+.theme-light .invariant-list svg { color: var(--state-verified); }
+
+/* Inner-edge highlights read as dirt on paper; remove them in light. */
+.theme-light .change-card,
+.theme-light .agent-card,
+.theme-light .impact-panel,
+.theme-light .executive-brief,
+.theme-light .receipt-panel,
+.theme-light .authority-gate {
+  box-shadow: none;
+}
+
+/* Light theme: the impact panel's night-sky internals become paper */
+
+.theme-light .impact-heading {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+
+.theme-light .graph-metrics {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-inset);
+}
+
+.theme-light .node-affected,
+.theme-light .node-verifying {
+  color: #085a80;
+  background: #e8f5fb;
+  box-shadow: 0 10px 22px -16px rgb(11 127 179 / 0.35);
+  border-color: rgb(11 127 179 / 0.55);
+}
+
+.theme-light .node-stale {
+  color: #7a5108;
+  background: #fdf3df;
+  border-color: rgb(160 106 16 / 0.6);
+}
+
+.theme-light .node-verified {
+  color: #10603d;
+  background: #e9f7ef;
+  border-color: rgb(23 122 79 / 0.5);
+  box-shadow: none;
+}
+
+.theme-light .node-repairing { color: #085a80; }
+.theme-light .impact-node.outcome-skipped { opacity: 0.5; }
+.theme-light .node-outcome { color: inherit; }
+
+.theme-light .before-after {
+  background: var(--bg-inset);
+}
+
+.theme-light .before-after span { color: var(--text-tertiary); }
+.theme-light .before-after strong { color: var(--state-verified); }
+.theme-light .receipt-hash code { color: var(--text-tertiary); }

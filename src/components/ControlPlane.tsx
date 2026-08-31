@@ -338,9 +338,12 @@ export function ControlPlane({
   // anything being removed, only folded.
   const [collapsed, setCollapsed] = useState({ left: false, right: false })
   const focusMode = collapsed.left && collapsed.right
+  // Light is the presentation default; the dark cockpit stays reachable via
+  // ?theme=dark so the recorded take and fixtures remain reproducible.
+  const theme = new URLSearchParams(window.location.search).get('theme') === 'dark' ? 'dark' : 'light'
 
   return (
-    <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}${focusMode ? ' focus-mode' : ''}`}>
+    <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}${focusMode ? ' focus-mode' : ''}${theme === 'light' ? ' theme-light' : ''}`}>
       <TopBar view={snapshot} sourcePreference={sourcePreference} transportSource={transportSource} />
       {transportStatus}
       <div
