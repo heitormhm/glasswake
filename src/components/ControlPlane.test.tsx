@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { getSnapshot } from '../app/fixtures'
 import { ControlPlane } from './ControlPlane'
@@ -41,5 +41,35 @@ describe('ControlPlane critical projections', () => {
     render(<ControlPlane snapshot={getSnapshot(3)} onSelectSnapshot={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Phase 4: Fleet dispatched' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Phase 9: Receipt sealed' })).toBeInTheDocument()
+  })
+
+  it('reports architecture facts from the origin and never invents them', () => {
+    const runtime = {
+      primaryModel: 'gemini-3.7-flash',
+      orchestrator: 'Google ADK',
+      execution: 'Cloud Run',
+      revision: 'glasswake-kanon-pulse-00005-6dd',
+      persistence: 'Firestore',
+      vertexAi: true,
+      workerRoles: 5,
+      mutationAdapters: 1,
+      authorizedRepairPaths: 3,
+    }
+    render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} runtime={runtime} />)
+    fireEvent.click(screen.getByRole('tab', { name: /Architecture/ }))
+
+    expect(screen.getByText('gemini-3.7-flash')).toBeInTheDocument()
+    expect(screen.getByText('Google ADK')).toBeInTheDocument()
+    expect(screen.getByText('1 adapter · 3 authorized paths')).toBeInTheDocument()
+    expect(screen.getByText('Repair cannot self-verify')).toBeInTheDocument()
+  })
+
+  it('says the origin reported nothing rather than showing a plausible default', () => {
+    render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} />)
+    fireEvent.click(screen.getByRole('tab', { name: /Architecture/ }))
+
+    expect(screen.getAllByText('not reported by origin').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Google ADK')).not.toBeInTheDocument()
+    expect(screen.getByText(/reports no cloud execution evidence/)).toBeInTheDocument()
   })
 })

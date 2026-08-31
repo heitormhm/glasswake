@@ -19,6 +19,7 @@ import type { ReactNode } from 'react'
 import { goldenRunPhaseLabels, type GoldenRunMode, type GoldenRunState } from '../app/demoRun'
 import { demoHref } from '../app/navigation'
 import type { AgentData, HackathonView, MissionStage } from '../app/types'
+import type { RouteARuntime } from '../app/routeAClient'
 import type { RouteASourcePreference } from '../app/useRouteASequence'
 import { EvidenceDrawer } from './EvidenceDrawer'
 import { ImpactMap } from './ImpactMap'
@@ -255,6 +256,7 @@ export function ControlPlane({
   onRunPause = () => {},
   onRunNext = () => {},
   onRunReset = () => {},
+  runtime = null,
 }: {
   snapshot: HackathonView
   onSelectSnapshot: (index: number) => void
@@ -269,6 +271,7 @@ export function ControlPlane({
   onRunPause?: () => void
   onRunNext?: () => void
   onRunReset?: () => void
+  runtime?: RouteARuntime | null
 }) {
   return (
     <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}`}>
@@ -279,7 +282,7 @@ export function ControlPlane({
         <ImpactMap view={snapshot} />
         <FleetRail view={snapshot} />
       </div>
-      <EvidenceDrawer view={snapshot} />
+      <EvidenceDrawer view={snapshot} runtime={runtime} />
       <RunDeck
         current={snapshot.index}
         onSelect={onSelectSnapshot}

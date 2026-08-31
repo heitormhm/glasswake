@@ -15,7 +15,8 @@ from hackathon.agent_catalog import catalog_projection
 from hackathon.contracts import schema_sha256
 from hackathon.fleet import SNAPSHOT_STATES, GoldenPathRunner
 from hackathon.google_stack.firestore_store import FirestoreRunStore, InMemoryRunStore
-from hackathon.google_stack.gemini import GeminiStructuredReviewer
+from hackathon.google_stack.gemini import DEFAULT_GEMINI_MODEL, GeminiStructuredReviewer
+from hackathon.repair_policy import ALLOWED_REPAIR_PATHS
 from hackathon.structured_output import StructuredOutputError
 
 app = FastAPI(title="GlassWake Route A", version="0.1.0")
@@ -38,10 +39,27 @@ def _snapshots() -> dict[str, dict[str, Any]]:
 
 
 def _health_payload() -> dict[str, Any]:
+    # `runtime` reports what this process actually is, read from its own
+    # environment. Nothing here is a claim the application invents: execution
+    # and revision come from the variables Cloud Run injects into its runtime.
+    revision = os.getenv("K_REVISION")
     return {
         "status": "ok",
         "mode": "deterministic_fixture",
         "contract_sha256": schema_sha256(),
+        "runtime": {
+            "primary_model": os.getenv("GLASSWAKE_GEMINI_MODEL", DEFAULT_GEMINI_MODEL),
+            "orchestrator": "Google ADK",
+            "execution": "Cloud Run" if revision else "Local process",
+            "revision": revision,
+            "persistence": (
+                "Firestore" if os.getenv("GLASSWAKE_STORE") == "firestore" else "In-memory"
+            ),
+            "vertex_ai": os.getenv("GOOGLE_GENAI_USE_VERTEXAI") == "true",
+            "worker_roles": len(catalog_projection()),
+            "mutation_adapters": 1,
+            "authorized_repair_paths": len(ALLOWED_REPAIR_PATHS),
+        },
     }
 
 

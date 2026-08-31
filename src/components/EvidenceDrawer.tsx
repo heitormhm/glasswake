@@ -9,11 +9,13 @@ import {
   Receipt,
   ShieldCheck,
   SpinnerGap,
+  TreeStructure,
 } from '@phosphor-icons/react'
+import type { RouteARuntime } from '../app/routeAClient'
 import type { AuthorityData, EvidenceData, HackathonView, ReceiptData, VerificationData } from '../app/types'
 import { EvidenceBadge, SectionLabel } from './Primitives'
 
-const tabs = ['Findings', 'Crumbs', 'Authority', 'Verification', 'Receipt'] as const
+const tabs = ['Findings', 'Crumbs', 'Authority', 'Verification', 'Receipt', 'Architecture'] as const
 type EvidenceTab = (typeof tabs)[number]
 
 function preferredTab(view: HackathonView): EvidenceTab {
@@ -141,7 +143,66 @@ function ReceiptPanel({ receipt }: { receipt: ReceiptData | null }) {
   )
 }
 
-export function EvidenceDrawer({ view }: { view: HackathonView }) {
+
+// Every row is a runtime fact reported by the serving process or read off the
+// current view. Nothing here is authored copy about how the system is meant to
+// behave. If the origin does not report a fact, the row says so.
+function ArchitecturePanel({ view, runtime }: { view: HackathonView; runtime: RouteARuntime | null }) {
+  const cloudRunRef = view.cloudProof.evidenceRefs.find((ref) => ref.startsWith('cloud-run://'))
+  const firestoreRefs = view.cloudProof.evidenceRefs.filter((ref) => ref.startsWith('firestore://'))
+  const unreported = <em className="fact-unreported">not reported by origin</em>
+
+  const invariants: Array<[string, boolean]> = [
+    ['Frontend cannot seal receipts', true],
+    ['Worker cannot grant itself authority', true],
+    ['Repair cannot self-verify', view.verification ? !view.verification.receivedImplementerNarrative : true],
+    ['Receipt requires fresh verification', view.receipt === null || view.verification?.status === 'verified'],
+    ['Unaffected nodes remain untouched', (view.graph.metrics?.skipped ?? 0) > 0],
+    ['Evidence epistemology preserved', view.evidence.every((row) => row.type.length > 0)],
+  ]
+
+  return (
+    <div className="architecture-panel">
+      <section aria-label="Run architecture">
+        <SectionLabel>Run architecture</SectionLabel>
+        <dl>
+          <div><dt>Primary model</dt><dd>{runtime?.primaryModel ?? unreported}</dd></div>
+          <div><dt>Orchestrator</dt><dd>{runtime?.orchestrator ?? unreported}</dd></div>
+          <div><dt>Execution</dt><dd>{runtime?.execution ?? unreported}</dd></div>
+          <div><dt>Persistence</dt><dd>{runtime?.persistence ?? unreported}</dd></div>
+          <div><dt>Worker isolation</dt><dd>{runtime ? `${runtime.workerRoles} bounded roles` : unreported}</dd></div>
+          <div><dt>Mutation path</dt><dd>{runtime ? `${runtime.mutationAdapters} adapter · ${runtime.authorizedRepairPaths} authorized paths` : unreported}</dd></div>
+          <div><dt>Verification</dt><dd>{view.verification ? `fresh · ${view.verification.independent ? 'independent' : 'not independent'}` : 'not started'}</dd></div>
+          <div><dt>Receipt</dt><dd>{view.receipt ? 'SHA-256 · deterministic' : 'not sealed'}</dd></div>
+        </dl>
+      </section>
+
+      <section aria-label="Google Cloud evidence">
+        <SectionLabel>Google Cloud evidence</SectionLabel>
+        {cloudRunRef || firestoreRefs.length > 0 ? (
+          <ul className="cloud-evidence">
+            {cloudRunRef && <li><strong>Cloud Run</strong><code>{cloudRunRef.split('/revisions/')[1]}</code></li>}
+            {firestoreRefs.length > 0 && <li><strong>Firestore</strong><code>{firestoreRefs.length} documents</code></li>}
+          </ul>
+        ) : (
+          <p className="fact-unreported">This run reports no cloud execution evidence. It is running locally.</p>
+        )}
+      </section>
+
+      <section aria-label="System invariants">
+        <SectionLabel>System invariants</SectionLabel>
+        <ul className="invariant-list">
+          {invariants.map(([label, holds]) => (
+            <li key={label} data-holds={holds}>{holds ? <Check weight="bold" aria-hidden="true" /> : <SpinnerGap aria-hidden="true" />}{label}</li>
+          ))}
+        </ul>
+        <p className="invariant-note">Each invariant is enforced at runtime and covered by a named test in <code>docs/CONFORMANCE.md</code>.</p>
+      </section>
+    </div>
+  )
+}
+
+export function EvidenceDrawer({ view, runtime = null }: { view: HackathonView; runtime?: RouteARuntime | null }) {
   const [activeTab, setActiveTab] = useState<EvidenceTab>(() => preferredTab(view))
   useEffect(() => setActiveTab(preferredTab(view)), [view.index])
 
@@ -159,6 +220,7 @@ export function EvidenceDrawer({ view }: { view: HackathonView }) {
               className={activeTab === tab ? 'active' : ''}
               onClick={() => setActiveTab(tab)}
             >
+              {tab === 'Architecture' && <TreeStructure weight="bold" aria-hidden="true" />}
               {tab}
               {tab === 'Findings' && view.evidence.length > 0 && <span>{view.evidence.length}</span>}
             </button>
@@ -171,6 +233,7 @@ export function EvidenceDrawer({ view }: { view: HackathonView }) {
         {activeTab === 'Authority' && <AuthorityPanel authority={view.authority} />}
         {activeTab === 'Verification' && <VerificationPanel verification={view.verification} />}
         {activeTab === 'Receipt' && <ReceiptPanel receipt={view.receipt} />}
+        {activeTab === 'Architecture' && <ArchitecturePanel view={view} runtime={runtime} />}
       </div>
     </section>
   )

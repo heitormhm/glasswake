@@ -18,6 +18,17 @@ const liveConnection = {
     statesValidated: 9,
     checkedAt: '2026-08-31T16:00:00.000Z',
   },
+  runtime: {
+    primaryModel: 'gemini-3.7-flash',
+    orchestrator: 'Google ADK',
+    execution: 'Local process',
+    revision: null,
+    persistence: 'In-memory',
+    vertexAi: false,
+    workerRoles: 5,
+    mutationAdapters: 1,
+    authorizedRepairPaths: 3,
+  },
 }
 
 describe('Route A to Route B application boundary', () => {

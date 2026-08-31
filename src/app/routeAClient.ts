@@ -50,6 +50,18 @@ export class RouteATransportError extends Error {
   }
 }
 
+export interface RouteARuntime {
+  primaryModel: string
+  orchestrator: string
+  execution: string
+  revision: string | null
+  persistence: string
+  vertexAi: boolean
+  workerRoles: number
+  mutationAdapters: number
+  authorizedRepairPaths: number
+}
+
 export interface RouteAConnection {
   snapshots: HackathonView[]
   metadata: {
@@ -59,6 +71,7 @@ export interface RouteAConnection {
     statesValidated: number
     checkedAt: string
   }
+  runtime: RouteARuntime | null
 }
 
 export interface RouteAClientOptions {
@@ -118,7 +131,34 @@ async function fetchJson(
   }
 }
 
-function assertHealth(value: unknown): { contractHash: string; healthMode: string } {
+function adaptRuntime(value: unknown): RouteARuntime | null {
+  // Absent on an older backend. Report nothing rather than inventing defaults:
+  // the architecture panel must never display a fact the origin did not send.
+  if (!isRecord(value)) return null
+  const text = (key: string) => (typeof value[key] === 'string' ? (value[key] as string) : null)
+  const count = (key: string) => (typeof value[key] === 'number' ? (value[key] as number) : 0)
+  const primaryModel = text('primary_model')
+  const orchestrator = text('orchestrator')
+  const execution = text('execution')
+  if (!primaryModel || !orchestrator || !execution) return null
+  return {
+    primaryModel,
+    orchestrator,
+    execution,
+    revision: text('revision'),
+    persistence: text('persistence') ?? 'Unreported',
+    vertexAi: value.vertex_ai === true,
+    workerRoles: count('worker_roles'),
+    mutationAdapters: count('mutation_adapters'),
+    authorizedRepairPaths: count('authorized_repair_paths'),
+  }
+}
+
+function assertHealth(value: unknown): {
+  contractHash: string
+  healthMode: string
+  runtime: RouteARuntime | null
+} {
   if (!isRecord(value) || value.status !== 'ok' || typeof value.mode !== 'string') {
     throw new RouteATransportError('SCHEMA_MISMATCH', 'The Route A health response is incompatible.')
   }
@@ -128,7 +168,11 @@ function assertHealth(value: unknown): { contractHash: string; healthMode: strin
   if (value.contract_sha256 !== canonicalContractHash) {
     throw new RouteATransportError('SCHEMA_MISMATCH', 'Route A is serving a different HackathonView contract.')
   }
-  return { contractHash: value.contract_sha256, healthMode: value.mode }
+  return {
+    contractHash: value.contract_sha256,
+    healthMode: value.mode,
+    runtime: adaptRuntime(value.runtime),
+  }
 }
 
 function assertStateCatalog(value: unknown): void {
@@ -227,6 +271,7 @@ export async function loadRouteASequence({
         statesValidated: rawSnapshots.length,
         checkedAt: new Date().toISOString(),
       },
+      runtime: health.runtime,
     }
   } catch (error) {
     if (timedOut) {

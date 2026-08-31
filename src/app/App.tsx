@@ -95,6 +95,7 @@ export function App() {
       onRunPause={goldenRun.pause}
       onRunNext={goldenRun.next}
       onRunReset={goldenRun.reset}
+      runtime={dataSource.kind === 'live' ? dataSource.runtime : null}
     />
   )
 }

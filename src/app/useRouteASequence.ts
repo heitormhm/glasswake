@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { snapshots as fixtureSnapshots } from './fixtures'
-import type { RouteATransportErrorCode } from './routeAClient'
+import type { RouteARuntime, RouteATransportErrorCode } from './routeAClient'
 import type { HackathonView } from './types'
 
 export type RouteASourcePreference = 'auto' | 'api' | 'fixture'
@@ -19,6 +19,7 @@ export type RouteADataSourceState =
       label: 'Local API validated' | 'Cloud Run validated'
       cloudRun: boolean
       revision: string | null
+      runtime: RouteARuntime | null
       detail: string
       apiBaseUrl: string
       contractHash: string
@@ -150,6 +151,7 @@ export function useRouteASequence({
             detail: `${connection.metadata.statesValidated}/9 canonical states passed schema and sequence validation${cloudRun && revision ? ` on revision ${revision}` : ''}.`,
             cloudRun,
             revision,
+            runtime: connection.runtime,
             ...connection.metadata,
           },
         })
