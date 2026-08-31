@@ -6,6 +6,7 @@ import {
   Fingerprint,
   LockKey,
   MagnifyingGlass,
+  MusicNotes,
   Receipt,
   ShieldCheck,
   ArrowsLeftRight,
@@ -291,63 +292,91 @@ interface DerivedOutputPayload {
 
 /**
  * Derived output is fetched only on demand and only at the sealed receipt.
- * A failure here is rendered as an unavailable brief, never as a broken
- * receipt: the run was already closed and independently verified before this
- * component existed.
+ * Two tracks exist -- the deterministic voice brief spoken by Gemini TTS and
+ * the Lyria audio bed -- and both are generated live from the same sealed
+ * receipt when their buttons are pressed. Nothing is prerecorded; the
+ * GENERATING state on screen is the actual model invocation in flight.
+ * A failure here renders as an unavailable brief, never as a broken receipt.
  */
 function ExecutiveBrief({ apiBaseUrl }: { apiBaseUrl: string | null }) {
-  const [state, setState] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle')
-  const [voice, setVoice] = useState<DerivedOutputPayload | null>(null)
+  const [phase, setPhase] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle')
+  const [track, setTrack] = useState<'voice' | 'audio' | null>(null)
+  const [output, setOutput] = useState<DerivedOutputPayload | null>(null)
   const [detail, setDetail] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const listen = async () => {
+  const generate = async (kind: 'voice' | 'audio') => {
     if (!apiBaseUrl) {
-      setState('unavailable')
+      setPhase('unavailable')
       setDetail('No live origin. Derived output requires the Route A service.')
       return
     }
-    setState('loading')
+    setTrack(kind)
+    setPhase('loading')
+    setDetail(null)
     try {
-      const response = await fetch(`${apiBaseUrl}/v1/demo/derived/voice`, { method: 'POST' })
+      const response = await fetch(`${apiBaseUrl}/v1/demo/derived/${kind}`, { method: 'POST' })
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const payload = (await response.json()) as DerivedOutputPayload
       if (!payload.available || !payload.media_base64) {
-        setState('unavailable')
+        setPhase('unavailable')
         setDetail(payload.reason ?? 'The derived model reported no output.')
         return
       }
-      setVoice(payload)
-      setState('ready')
+      setOutput(payload)
+      setPhase('ready')
       window.setTimeout(() => void audioRef.current?.play(), 0)
     } catch (error) {
-      setState('unavailable')
+      setPhase('unavailable')
       setDetail(error instanceof Error ? error.message : 'Derived output unavailable.')
     }
   }
+
+  const generating = (kind: 'voice' | 'audio') => phase === 'loading' && track === kind
 
   return (
     <section className="executive-brief" aria-label="Executive brief">
       <div className="brief-head">
         <SectionLabel>Executive brief</SectionLabel>
-        <button type="button" className="brief-listen" onClick={() => void listen()} disabled={state === 'loading'}>
-          {state === 'loading' ? <SpinnerGap className="semantic-spin" aria-hidden="true" /> : <SpeakerHigh weight="fill" aria-hidden="true" />}
-          {state === 'loading' ? 'Generating…' : state === 'ready' ? 'Replay' : 'Listen'}
-        </button>
+        <div className="brief-tracks">
+          <button
+            type="button"
+            className="brief-listen"
+            onClick={() => void generate('voice')}
+            disabled={phase === 'loading'}
+          >
+            {generating('voice')
+              ? <SpinnerGap className="semantic-spin" aria-hidden="true" />
+              : <SpeakerHigh weight="fill" aria-hidden="true" />}
+            {generating('voice') ? 'Generating…' : 'Listen'}
+          </button>
+          <button
+            type="button"
+            className="brief-listen brief-listen-lyria"
+            onClick={() => void generate('audio')}
+            disabled={phase === 'loading'}
+          >
+            {generating('audio')
+              ? <SpinnerGap className="semantic-spin" aria-hidden="true" />
+              : <MusicNotes weight="fill" aria-hidden="true" />}
+            {generating('audio') ? 'Lyria · generating…' : 'Audio bed · Lyria'}
+          </button>
+        </div>
       </div>
 
-      {state === 'ready' && voice && (
+      {phase === 'ready' && output && (
         <>
-          <audio ref={audioRef} controls src={`data:${voice.mime_type};base64,${voice.media_base64}`} />
-          <p className="brief-script">{voice.script}</p>
+          <audio ref={audioRef} controls src={`data:${output.mime_type};base64,${output.media_base64}`} />
+          {output.script && <p className="brief-script">{output.script}</p>}
           <dl className="brief-meta">
-            <div><dt>Voice</dt><dd>{voice.model}</dd></div>
-            <div><dt>Source</dt><dd>{voice.provenance.source_receipt}</dd></div>
+            <div><dt>{track === 'audio' ? 'Audio' : 'Voice'}</dt><dd>{output.model}</dd></div>
+            <div><dt>Source</dt><dd>{output.provenance.source_receipt}</dd></div>
+            <div><dt>Derived</dt><dd>from sealed receipt</dd></div>
           </dl>
         </>
       )}
 
-      {state === 'unavailable' && (
+      {phase === 'unavailable' && (
         <p className="brief-unavailable"><WarningOctagon aria-hidden="true" />Derived output unavailable. The sealed receipt is unaffected.{detail ? ` (${detail})` : ''}</p>
       )}
 
@@ -357,7 +386,7 @@ function ExecutiveBrief({ apiBaseUrl }: { apiBaseUrl: string | null }) {
         <li><Check aria-hidden="true" />cannot mutate state</li>
         <li><Check aria-hidden="true" />fail-soft</li>
       </ul>
-      <p className="brief-note">Spoken text is assembled from receipt fields, not written by a model.</p>
+      <p className="brief-note">Voice gemini-2.5-flash-tts · Audio bed lyria-002 — generated live from the sealed receipt. Spoken text is assembled from receipt fields, not written by a model.</p>
     </section>
   )
 }

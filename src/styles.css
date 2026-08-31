@@ -3242,3 +3242,15 @@ time {
   outline: 2px solid var(--state-active);
   outline-offset: 2px;
 }
+
+/* Executive brief — dual derived tracks */
+
+.brief-tracks { display: flex; gap: 7px; }
+
+.brief-listen-lyria {
+  border-color: rgb(68 199 244 / 0.5);
+  color: var(--state-active);
+  background: transparent;
+}
+
+.brief-listen-lyria:hover:not(:disabled) { background: rgb(68 199 244 / 0.09); filter: none; }

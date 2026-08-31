@@ -105,4 +105,12 @@ describe('ControlPlane critical projections', () => {
     render(<ControlPlane snapshot={getSnapshot(6)} onSelectSnapshot={vi.fn()} apiBaseUrl="http://127.0.0.1:8080" />)
     expect(screen.getByText(/The mutation response is not verification/)).toBeInTheDocument()
   })
+
+  it('exposes the Lyria track in the product before any invocation', () => {
+    render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} apiBaseUrl="http://127.0.0.1:8080" />)
+    expect(screen.getByRole('button', { name: /Audio bed · Lyria/ })).toBeInTheDocument()
+    // The truthful model id is visible without clicking anything.
+    expect(screen.getByText(/lyria-002/)).toBeInTheDocument()
+    expect(screen.getByText(/generated live from the sealed receipt/)).toBeInTheDocument()
+  })
 })
