@@ -113,4 +113,20 @@ describe('ControlPlane critical projections', () => {
     expect(screen.getByText(/lyria-002/)).toBeInTheDocument()
     expect(screen.getByText(/generated live from the sealed receipt/)).toBeInTheDocument()
   })
+
+  it('focus mode trades the side rails for a full-width stage and back', () => {
+    const { container } = render(<ControlPlane snapshot={getSnapshot(8)} onSelectSnapshot={vi.fn()} />)
+    const main = container.querySelector('main')!
+    expect(main.classList.contains('focus-mode')).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Focus' }))
+    expect(main.classList.contains('focus-mode')).toBe(true)
+    // Rails are hidden by the stylesheet, which jsdom does not load; the class
+    // is the contract. The map and drawer must survive the toggle.
+    expect(screen.getByText('Impact map')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Exit focus' })).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Exit focus' }))
+    expect(main.classList.contains('focus-mode')).toBe(false)
+  })
 })

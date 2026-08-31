@@ -1,6 +1,8 @@
 import {
   ArrowClockwise,
   ArrowRight,
+  ArrowsInSimple,
+  ArrowsOutSimple,
   Browser,
   CaretRight,
   Check,
@@ -15,6 +17,7 @@ import {
   SkipForward,
   WaveSine,
 } from '@phosphor-icons/react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { goldenRunPhaseLabels, type GoldenRunMode, type GoldenRunState } from '../app/demoRun'
 import { demoHref } from '../app/navigation'
@@ -175,6 +178,8 @@ function RunDeck({
   onPause,
   onNext,
   onReset,
+  focusMode,
+  onToggleFocus,
 }: {
   current: number
   onSelect: (index: number) => void
@@ -187,6 +192,8 @@ function RunDeck({
   onPause: () => void
   onNext: () => void
   onReset: () => void
+  focusMode: boolean
+  onToggleFocus: () => void
 }) {
   const started = runMode !== 'idle'
   const complete = current === goldenRunPhaseLabels.length - 1
@@ -209,6 +216,10 @@ function RunDeck({
         </button>
         <button type="button" className="run-button" onClick={onReset} disabled={!started && current === 0}>
           <ArrowClockwise weight="bold" aria-hidden="true" />Reset
+        </button>
+        <button type="button" className="run-button" onClick={onToggleFocus} aria-pressed={focusMode}>
+          {focusMode ? <ArrowsInSimple weight="bold" aria-hidden="true" /> : <ArrowsOutSimple weight="bold" aria-hidden="true" />}
+          {focusMode ? 'Exit focus' : 'Focus'}
         </button>
         <RunIdentity mode={runMode} run={run} />
       </div>
@@ -275,8 +286,12 @@ export function ControlPlane({
   runtime?: RouteARuntime | null
   apiBaseUrl?: string | null
 }) {
+  // Focus mode exists for one audience: a camera. It trades the side rails for
+  // a full-width map and a larger drawer so a single stage is legible on video.
+  const [focusMode, setFocusMode] = useState(false)
+
   return (
-    <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}`}>
+    <main className={`control-plane snapshot-${snapshot.snapshot}${transportStatus ? ' with-transport' : ''}${focusMode ? ' focus-mode' : ''}`}>
       <TopBar view={snapshot} sourcePreference={sourcePreference} transportSource={transportSource} />
       {transportStatus}
       <div className="control-grid">
@@ -297,6 +312,8 @@ export function ControlPlane({
         onPause={onRunPause}
         onNext={onRunNext}
         onReset={onRunReset}
+        focusMode={focusMode}
+        onToggleFocus={() => setFocusMode((value) => !value)}
       />
     </main>
   )

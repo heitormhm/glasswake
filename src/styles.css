@@ -3254,3 +3254,37 @@ time {
 }
 
 .brief-listen-lyria:hover:not(:disabled) { background: rgb(68 199 244 / 0.09); filter: none; }
+
+/* Focus mode — one stage at a time, sized for a camera */
+
+.control-plane.focus-mode .change-rail,
+.control-plane.focus-mode .fleet-rail {
+  display: none;
+}
+
+.control-plane.focus-mode .control-grid {
+  grid-template-columns: 1fr;
+}
+
+.control-plane.focus-mode .evidence-drawer {
+  height: 300px;
+}
+
+.control-plane.focus-mode .drawer-state-authority_ready,
+.control-plane.focus-mode .drawer-state-repair_applied,
+.control-plane.focus-mode .drawer-state-verifying {
+  height: 320px;
+}
+
+.control-plane.focus-mode .drawer-state-receipt_complete {
+  height: 384px;
+}
+
+.control-plane.focus-mode .drawer-content {
+  zoom: 1.18;
+}
+
+.run-button[aria-pressed="true"] {
+  border-color: var(--state-active);
+  color: var(--state-active);
+}
