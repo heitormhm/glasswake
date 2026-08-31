@@ -2,6 +2,7 @@
 
 - Branch: `route-b-v2` (local repository; no remote or integration performed).
 - Initial consolidated commit: `ce41e61`.
+- Frozen-contract integration commit: `74cc9a2`.
 - Run: `npm install && npm run dev`.
 - Control plane: `/control-plane` (also rendered at `/`).
 - Storefront: `/store`, `/store/product/NST-BAG-001`, `/store/checkout-help`.
