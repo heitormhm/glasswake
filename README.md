@@ -162,7 +162,7 @@ CHANGE → Gemma 4 (candidate only) → deterministic validation
 | Google Cloud service | **Cloud Run** (execution) + **Firestore** (persistence) |
 | Additional model | **Gemma 4** (`gemma-4-26b-a4b-it-maas`) — candidate-only Wake Triage |
 | Additional model | **Lyria** (`lyria-002`) — receipt-derived executive audio bed |
-| Additional model | **Veo 3.1** (`veo-3.1-fast-generate-001`) — receipt-derived incident replay |
+| Additional model | **Veo 3.1** (`veo-3.1-fast-generate-001`) — receipt-derived incident replay, and the storefront's 360° product film (`public/media/navy-bag-360.mp4`, generated once and committed) |
 | Additional model | **Gemini TTS** (`gemini-2.5-flash-tts`) — speaks the deterministic briefing |
 
 Runtime evidence is not asserted by the application: Cloud Run injects

@@ -3346,3 +3346,28 @@ time {
   border-color: var(--state-active);
   color: var(--state-active);
 }
+
+/* Veo product film — a committed asset, generated once */
+
+.product-film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.film-credit {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  z-index: 1;
+  padding: 3px 8px;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 4px;
+  color: rgb(255 255 255 / 0.75);
+  background: rgb(10 20 35 / 0.55);
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+}

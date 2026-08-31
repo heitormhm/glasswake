@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ShoppingBagOpen,
 } from '@phosphor-icons/react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { demoHref } from '../app/navigation'
 import type { HackathonView } from '../app/types'
@@ -53,11 +54,40 @@ function StoreHeader({ state, sourcePreference }: { state: number; sourcePrefere
   )
 }
 
-function ProductVisual({ tone, icon: Icon, large = false }: { tone: string; icon: typeof Bag; large?: boolean }) {
+function ProductVisual({
+  tone,
+  icon: Icon,
+  large = false,
+  film,
+}: {
+  tone: string
+  icon: typeof Bag
+  large?: boolean
+  film?: string
+}) {
+  // The film is a committed asset generated once with Veo; the icon remains
+  // the fallback if the file is missing or the browser refuses playback.
+  const [filmFailed, setFilmFailed] = useState(false)
+  const showFilm = Boolean(film) && !filmFailed
   return (
     <div className={`product-visual product-${tone}${large ? ' product-visual-large' : ''}`} aria-hidden="true">
       <div className="visual-grid" />
-      <div className="product-object"><Icon weight="duotone" /></div>
+      {showFilm ? (
+        <>
+          <video
+            className="product-film"
+            src={film}
+            autoPlay
+            muted
+            loop
+            playsInline
+            onError={() => setFilmFailed(true)}
+          />
+          <span className="film-credit">PRODUCT FILM · VEO</span>
+        </>
+      ) : (
+        <div className="product-object"><Icon weight="duotone" /></div>
+      )}
       <span className="visual-edition">NORTHSTAR / FIELD SERIES</span>
     </div>
   )
@@ -129,7 +159,7 @@ function ProductDetail({ view, sourcePreference }: { view: HackathonView; source
     <main className="product-detail-page">
       <div className="store-breadcrumbs"><a href={demoHref('/store', view.index, sourcePreference)}>Field goods</a><CaretRight aria-hidden="true" /><span>Navy Commuter Bag</span></div>
       <section className="product-detail-grid">
-        <ProductVisual tone="navy" icon={Bag} large />
+        <ProductVisual tone="navy" icon={Bag} large film="/media/navy-bag-360.mp4" />
         <div className="product-detail-copy">
           <p className="store-kicker">Northstar Field Series · 01</p>
           <h1>Navy Commuter Bag</h1>
