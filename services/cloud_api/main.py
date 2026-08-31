@@ -16,6 +16,7 @@ from hackathon.contracts import schema_sha256
 from hackathon.fleet import SNAPSHOT_STATES, GoldenPathRunner
 from hackathon.google_stack.firestore_store import FirestoreRunStore, InMemoryRunStore
 from hackathon.google_stack.gemini import DEFAULT_GEMINI_MODEL, GeminiStructuredReviewer
+from hackathon.google_stack.gemma_triage import DEFAULT_GEMMA_MODEL, GemmaWakeTriage
 from hackathon.repair_policy import ALLOWED_REPAIR_PATHS
 from hackathon.structured_output import StructuredOutputError
 
@@ -59,6 +60,8 @@ def _health_payload() -> dict[str, Any]:
             "worker_roles": len(catalog_projection()),
             "mutation_adapters": 1,
             "authorized_repair_paths": len(ALLOWED_REPAIR_PATHS),
+            "triage_model": os.getenv("GLASSWAKE_GEMMA_MODEL", DEFAULT_GEMMA_MODEL),
+            "triage_authority": "candidate_only",
         },
     }
 
@@ -274,3 +277,34 @@ def advance_run(run_id: str) -> dict[str, Any]:
             {"seq": run["cursor"], "phase": GOLDEN_PHASES[run["cursor"]], "at": _now()}
         )
     return _projection(run)
+
+
+@app.post("/v1/demo/triage")
+def wake_triage(change: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Gemma preflight. Advisory, and fail-soft by design.
+
+    Triage runs before the governed core and cannot alter canonical scope, so a
+    Gemma outage must degrade the demo's richness and nothing else. A failure is
+    reported as an unavailable triage, never as a failed run.
+    """
+    event = change or {"subject": "returns_window", "before": 30, "after": 14}
+    try:
+        candidate, validation = GemmaWakeTriage().triage(event)
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": f"{type(exc).__name__}: {exc}"[:200],
+            "authority": "candidate_only",
+            "canonical_scope_affected": False,
+        }
+    return {
+        "available": True,
+        "model": candidate.model,
+        "candidate": {
+            "domain": candidate.domain,
+            "candidate_watchzones": list(candidate.candidate_watchzones),
+            "risk_class": candidate.risk_class,
+        },
+        "validation": validation.projection(),
+        "canonical_scope_affected": False,
+    }
