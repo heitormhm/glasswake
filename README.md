@@ -32,6 +32,8 @@ Seven invariants, each enforced at runtime and covered by a named test in
 
 ## Architecture
 
+![GlassWake architecture](docs/architecture.png)
+
 ```mermaid
 flowchart TD
     CHANGE[Change event<br/>returns window 30 → 14] --> GEMMA
