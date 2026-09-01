@@ -8,8 +8,9 @@ the agents responsible for what may now be wrong, proves what is stale, repairs
 only what it is authorized to touch, and refuses to close until an independent
 verifier confirms the repair by fresh reading.
 
+- **Live demo:** https://glasswake-kanon-pulse-701830159437.us-central1.run.app/control-plane — press **Run GlassWake**
 - **Category:** Fortified Enterprise Fleet
-- **Live backend:** Cloud Run revision `glasswake-kanon-pulse-00007-z2r` (`us-central1`)
+- **Live backend:** Cloud Run revision `glasswake-kanon-pulse-00011-xbm` (`us-central1`)
 - **Architecture records:** [`docs/adr/`](docs/adr/) · **Invariant coverage:** [`docs/CONFORMANCE.md`](docs/CONFORMANCE.md)
 
 ## The architectural thesis
