@@ -12,6 +12,7 @@ COPY src ./src
 COPY services ./services
 COPY contracts ./contracts
 COPY fixtures ./fixtures
+COPY dist ./dist
 
 RUN pip install --no-cache-dir ".[api,google]"
 

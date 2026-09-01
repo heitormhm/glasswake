@@ -5,11 +5,13 @@ import os
 import time
 from collections import OrderedDict
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from hackathon.agent_catalog import catalog_projection
 from hackathon.contracts import schema_sha256
@@ -416,3 +418,26 @@ def external_action(request: dict[str, Any] | None = None) -> dict[str, Any]:
     payload["verification"] = verification.projection()
     payload["receipt_sealable"] = verification.result == "PASS"
     return payload
+
+
+# --- Hosted demo: serve the built control plane from the same origin ---------
+#
+# The SPA is built with VITE_ROUTE_A_BASE_URL=/ so every API call is relative;
+# one Cloud Run service hosts both the UI and /v1, and CORS never enters the
+# picture. Registered last so it can never shadow an API route, and /v1 paths
+# are excluded explicitly so an unknown API path stays a 404, not index.html.
+
+_DIST = Path(os.getenv("GLASSWAKE_DIST_DIR", "dist"))
+
+
+@app.get("/{spa_path:path}", include_in_schema=False)
+def serve_spa(spa_path: str) -> FileResponse:
+    if spa_path.startswith(("v1/", "v1", "healthz")):
+        raise HTTPException(status_code=404, detail="Unknown API path.")
+    candidate = (_DIST / spa_path).resolve()
+    if spa_path and candidate.is_file() and _DIST.resolve() in candidate.parents:
+        return FileResponse(candidate)
+    index = _DIST / "index.html"
+    if not index.is_file():
+        raise HTTPException(status_code=404, detail="UI bundle not present on this deployment.")
+    return FileResponse(index)
